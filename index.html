@@ -9,24 +9,157 @@
         // Stageオブジェクトを作成します
         var stage = new createjs.Stage("myCanvas");
 
-        var shape = new createjs.Shape();
-        shape.graphics.beginFill("#ff0000");
-        shape.graphics.drawCircle(0, 0, 100);
-        shape.y = 100;
-        stage.addChild(shape);
+        stage.enableMouseOver();
 
-        createjs.Ticker.addEventListener("tick", handleTick);
-        createjs.Ticker.timingMode = createjs.Ticker.RAF;
-
-        function handleTick(){
-            stage.update();
-
-            if(shape.x > 1920) shape.x = 0;
-
-            shape.x += 5;
+        // タッチ操作をサポートしているブラウザーならば
+        if (createjs.Touch.isSupported() == true) {
+          // タッチ操作を有効にします。
+          createjs.Touch.enable(stage)
         }
+
+        // リサイズイベントを検知してリサイズ処理を実行
+        window.addEventListener("resize", handleResize);
+        handleResize(); // 起動時にもリサイズしておく
+
+        // リサイズ処理
+        function handleResize(event) {
+          // 画面幅・高さを取得
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          // Canvas要素の大きさを画面幅・高さに合わせる
+          stage.canvas.width = w;
+          stage.canvas.height = h;
+          // 画面更新する
+          stage.update();
+        }
+
+        var polyList = []; // 複数の星とのアタリ判定のために配列を作成
+        // 星をいくつか作成します
+        for (var i = 0; i < 20; i++) {
+          var poly = new createjs.Shape();
+          stage.addChild(poly); // 表示リストに追加
+          // ランダムに配置
+          poly.x = 400 * Math.random();
+          poly.y = 200 * Math.random();
+
+          // 配列に保存する
+          polyList[i] = poly;
+        }
+
+
+        // 小さな星を作成します
+        var miniStar = new createjs.Shape();
+        miniStar.graphics.beginFill("blue").drawPolyStar(0, 0, 10, 5, 0.6, -90);
+        miniStar.y = 100;
+        stage.addChild(miniStar); // 表示リストに追加
+
+        // 小さな星の移動速度です
+        var vx = +10;
+
+        // 時間経過のイベント
+        createjs.Ticker.addEventListener("tick", handleTick);
+        function handleTick() {
+          // 小さな星のモーションを指定
+          miniStar.x += vx;
+          if (miniStar.x > 400) {
+            vx = -10;
+            miniStar.x = 400;
+          } else if (miniStar.x < 0) {
+            vx = +10;
+            miniStar.x = 0;
+          }
+
+          // 複数の星とのアタリ判定をfor文でチェックする
+          for (var i = 0; i < polyList.length; i++) {
+            // 配列の要素を参照する (i番目の星)
+            var poly = polyList[i]; // i 番目の poly を取得
+
+            // 小さな星とi番目の星の相対座標を求める
+            var point = miniStar.localToLocal(0, 0, poly);
+            // i番目の星と小さな星があたっているかを調べる
+            var isHit = poly.hitTest(point.x, point.y);
+
+            // あたっていれば
+            if (isHit == true) {
+              // i番目の星を赤色で塗る
+              poly.graphics.clear()
+                      .beginFill("DarkRed")
+                      .drawPolyStar(0, 0, 30, 10, 0.6, -90);
+            } else {
+              // i番目の星を緑色で塗る
+              poly.graphics.clear()
+                      .beginFill("green")
+                      .drawPolyStar(0, 0, 30, 10, 0.6, -90);
+            }
+          }
+
+          // Stageの描画を更新
+          stage.update();
+      }
+    }
+
+    function createButton(text, width, height, keyColor){
+      var button = new createjs.Container();
+        button.x = 200;
+        button.y = 200;
+        button.cursor = "pointer";
+        button.name = text;
+
+        var bg = new createjs.Shape();
+        var bgWidth = 100;
+        var bgHeight = 80;
+        bg.graphics.beginFill("white");
+        bg.graphics.drawRoundRect(0, 0, bgWidth, bgHeight);
+        bg.graphics.beginStroke(keyColor);
+        bg.graphics.drawRoundRect(0, 0, bgWidth, bgHeight, 20, 20);
+        button.addChild(bg);
+
+        // 通常時の座布団を作成
+        var bgUp = new createjs.Shape();
+        // グラフィックを作成
+        button.addChild(bgUp);
+        bgUp.visible = true; // 表示する
+
+        // ロールオーバー時の座布団を作成
+        var bgOver = new createjs.Shape();
+        // グラフィックを作成
+        bgOver.visible = false; // 非表示にする
+        button.addChild(bgOver);
+
+        var label = new createjs.Text("Button", "24px sans-serif", keyColor);
+        label.textAlign = "center";
+        label.textBaseline = "middle";
+        label.x = bgWidth / 2;
+        label.y = bgHeight / 2;
+        button.addChild(label);
+
+        // ロールオーバーイベントを登録
+        button.addEventListener("mouseover", handleMouseOver);
+        button.addEventListener("mouseout", handleMouseOut);
+        function handleMouseOver(event) {
+          bgUp.visble = false;
+          bgOver.visible = true;
+          label.color = "white";
+        }
+        function handleMouseOut(event) {
+          bgUp.visble = true;
+          bgOver.visible = false;
+          label.color = keyColor;
+        }
+
+        return button;
     }
   </script>
+  <style>
+    canvas#myCanvas{
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
 </head>
 <body>
   <canvas id="myCanvas" width="1920" height="1080"></canvas>
