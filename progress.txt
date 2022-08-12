@@ -1,2 +1,2 @@
-次はインタラクションの項目から
-https://ics.media/tutorial-createjs/mouse_xy/
+数学　の項目まで完成、後は必要に応じて参照する
+https://ics.media/tutorial-createjs/basic/
