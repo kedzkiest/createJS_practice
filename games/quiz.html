@@ -174,28 +174,32 @@
             var verticalSpace = 150;
 
             if(gameMode == 1){
-                var buttonTexts = new Array("ABC", "ABD", "BCD", "DBD");
-                var section1 = createSection("Q1. DBDとはなんの略？", buttonTexts, 0);
+                var buttonTexts_0 = new Array("ABC", "ABD", "BCD", "DBD");
+                var section1 = createSection("Q1. DBDとはなんの略？", buttonTexts_0, 0);
                 section1.x = leftMargin;
                 section1.y = topMargin;
                 mainCanvas.addChild(section1);
 
-                var section2 = createSection("Q2. DBDのレーティングは何？", "全年齢対象", "R-15", "R-18", "R-81", 1);
+                var buttonTexts_1 = new Array("全年齢対象", "R-15", "R-18", "R-81");
+                var section2 = createSection("Q2. DBDのレーティングは何？", buttonTexts_1, 1);
                 section2.x = leftMargin;
                 section2.y = section1.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section2);
 
-                var section3 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 2);
+                var buttonTexts_2 = new Array("全年齢対象", "R-15", "R-18", "R-81")
+                var section3 = createSection("Q3. テスト", buttonTexts_2, 2);
                 section3.x = leftMargin;
                 section3.y = section2.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section3);
 
-                var section4 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 3);
+                var buttonTexts_3 = new Array("全年齢対象", "R-15", "R-18", "R-81")
+                var section4 = createSection("Q3. テスト", buttonTexts_3, 3);
                 section4.x = leftMargin;
                 section4.y = section3.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section4);
 
-                var section5 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 4);
+                var buttonTexts_4 = new Array("全年齢対象", "R-15", "R-18", "R-81")
+                var section5 = createSection("Q3. テスト", buttonTexts_4, 4);
                 section5.x = leftMargin;
                 section5.y = section4.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section5);
