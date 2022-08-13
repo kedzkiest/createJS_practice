@@ -1,0 +1,385 @@
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+  <script>
+
+    window.addEventListener("load", init);
+    var answers = new Array(-1, -1, -1, -1, -1);
+    var queue = new createjs.LoadQueue();
+
+    function init() {
+        // Stageオブジェクトを作成します
+        var stage = new createjs.Stage("myCanvas");
+
+        queue.loadManifest([
+            {id: 'image1', src: 'checkMark.png'}
+        ]);
+
+        stage.enableMouseOver();
+
+        // タッチ操作をサポートしているブラウザーならば
+        if (createjs.Touch.isSupported() == true) {
+          // タッチ操作を有効にします。
+          createjs.Touch.enable(stage)
+        }
+
+        /*
+        // リサイズイベントを検知してリサイズ処理を実行
+        window.addEventListener("resize", handleResize);
+        handleResize(); // 起動時にもリサイズしておく
+
+        // リサイズ処理
+        function handleResize(event) {
+          // 画面幅・高さを取得
+          var w = window.innerWidth;
+          var h = window.innerHeight;
+          // Canvas要素の大きさを画面幅・高さに合わせる
+          stage.canvas.width = w;
+          stage.canvas.height = h;
+          // 画面更新する
+          stage.update();
+        }
+        */
+
+        // ここから上はいじらない
+        /////////////////////////////////////////////////////////////
+
+        // どのキャンバスを見せるかをコントロールするフラグ
+        // 初めはタイトルからスタート
+        var titleCanvas_enabled = true;
+        var mainCanvas_enabled = false;
+        var resultCanvas_enabled = false;
+
+        // キャンバスのインスタンス
+        var titleCanvas = new createjs.Container();
+        stage.addChild(titleCanvas);
+
+        var mainCanvas = new createjs.Container();
+        stage.addChild(mainCanvas);
+
+        var resultCanvas = new createjs.Container();
+        stage.addChild(resultCanvas);
+
+        // ゲームモード(1 = easy, 2 = normal, 3 = hard)
+        var gameMode;
+
+        InitTitle();
+        //InitResult();
+
+        createjs.Ticker.addEventListener("tick", handleTick);
+        createjs.Ticker.timingMode = createjs.Ticker.RAF;
+
+        // ゲーム全体で走らせたい処理
+        function handleTick(){
+            stage.update();
+
+            // キャンバスの表示・非表示切り替え
+            titleCanvas.visible = titleCanvas_enabled ? true : false;
+            mainCanvas.visible = mainCanvas_enabled ? true : false;
+            //resultCanvas.visible = resultCanvas_enabled ? true : false;
+        }
+
+        function InitTitle(){
+            // タイトルキャンバスにタイトルテキストを追加
+            var titleText = new createjs.Text("DBDクイズ","120px serif", "black");
+            titleText.x = stage.canvas.width / 2;
+            titleText.y = stage.canvas.height / 4;
+            titleText.textAlign = "center";
+            titleText.textBaseline = "middle";
+            titleCanvas.addChild(titleText);
+
+            var test = new createjs.Shape();
+            test.graphics.beginFill("red");
+            test.graphics.drawCircle(0, 0, 10);
+            test.x = stage.canvas.width / 2;
+            test.y = stage.canvas.height / 2;
+            titleCanvas.addChild(test);
+
+            // タイトルキャンバスに「かんたん」ボタンを追加
+            var easyButton_width = 300;
+            var easyButton_height = 100;
+            var easyButton = createButton("かんたん", easyButton_width, easyButton_height, "#66ff66", "#000000");
+            easyButton.x = stage.canvas.width / 2 - easyButton_width / 2;
+            easyButton.y = stage.canvas.height / 2 - easyButton_height / 2;
+            easyButton.textAlign = "center";
+            easyButton.textBaseline = "middle";
+
+            easyButton.addEventListener("click", OnPressEasyButton);
+            function OnPressEasyButton(event){
+                titleCanvas_enabled = false;
+                mainCanvas_enabled = true;
+                gameMode = 1;
+                InitMain();
+            }
+
+            titleCanvas.addChild(easyButton);
+
+
+            // タイトルキャンバスに「ふつう」ボタンを追加
+            var normalButton_width = 300;
+            var normalButton_height = 100;
+            var normalButton = createButton("ふつう", normalButton_width, normalButton_height, "#6666ff", "#000000");
+            normalButton.x = stage.canvas.width / 2 - normalButton_width / 2;
+            normalButton.y = stage.canvas.height / 2 + normalButton_height / 2 + 10;
+            normalButton.textAlign = "center";
+            normalButton.textBaseline = "middle";
+
+            normalButton.addEventListener("click", OnPressNormalButton);
+            function OnPressNormalButton(event){
+                titleCanvas_enabled = false;
+                mainCanvas_enabled = true;
+                gameMode = 2;
+                InitMain();
+            }
+
+            titleCanvas.addChild(normalButton);
+
+
+            // タイトルキャンバスに「むずかしい」ボタンを追加
+            var hardButton_width = 300;
+            var hardButton_height = 100;
+            var hardButton = createButton("むずかしい", hardButton_width, hardButton_height, "#ff6666", "#000000");
+            hardButton.x = stage.canvas.width / 2 - hardButton_width / 2;
+            hardButton.y = stage.canvas.height / 2 + 3 * hardButton_height / 2 + 20;
+            hardButton.textAlign = "center";
+            hardButton.textBaseline = "middle";
+
+            hardButton.addEventListener("click", OnPressHardButton);
+            function OnPressHardButton(event){
+                titleCanvas_enabled = false;
+                mainCanvas_enabled = true;
+                gameMode = 3;
+                InitMain();
+            }
+
+            titleCanvas.addChild(hardButton);
+
+            
+
+            createjs.Ticker.addEventListener("tick", titleTick);
+            createjs.Ticker.timingMode = createjs.Ticker.RAF;
+            // タイトルだけで走らせたい処理
+            function titleTick(){
+                stage.update();
+            }
+        }
+
+
+
+        function InitMain(){
+            var leftMargin = 30;
+            var topMargin = 30;
+            var verticalSpace = 150;
+
+            if(gameMode == 1){
+                var buttonTexts = new Array("ABC", "ABD", "BCD", "DBD");
+                var section1 = createSection("Q1. DBDとはなんの略？", buttonTexts, 0);
+                section1.x = leftMargin;
+                section1.y = topMargin;
+                mainCanvas.addChild(section1);
+
+                var section2 = createSection("Q2. DBDのレーティングは何？", "全年齢対象", "R-15", "R-18", "R-81", 1);
+                section2.x = leftMargin;
+                section2.y = section1.y + verticalSpace + topMargin;
+                mainCanvas.addChild(section2);
+
+                var section3 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 2);
+                section3.x = leftMargin;
+                section3.y = section2.y + verticalSpace + topMargin;
+                mainCanvas.addChild(section3);
+
+                var section4 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 3);
+                section4.x = leftMargin;
+                section4.y = section3.y + verticalSpace + topMargin;
+                mainCanvas.addChild(section4);
+
+                var section5 = createSection("Q3. テスト", "全年齢対象", "R-15", "R-18", "R-81", 4);
+                section5.x = leftMargin;
+                section5.y = section4.y + verticalSpace + topMargin;
+                mainCanvas.addChild(section5);
+            }
+
+            if(gameMode == 2){
+
+            }
+
+            if(gameMode == 3){
+
+            }
+
+            window.addEventListener("keydown", handleKeydown);
+
+            function handleKeydown(event){
+                // キーコード
+                var keyCode = event.keyCode;
+                if(keyCode == 80){
+                    console.log(answers);
+                }
+            }
+            createjs.Ticker.addEventListener("tick", mainTick);
+            createjs.Ticker.timingMode = createjs.Ticker.RAF;
+            // インゲームだけで走らせたい処理
+            function mainTick(){
+                stage.update();
+            }
+        }
+    }
+
+    function createButton(text, width, height, keyColor, rollOverColor){
+        var button = new createjs.Container();
+        button.cursor = "pointer";
+        button.name = text;
+
+        var bg = new createjs.Shape();
+        bg.graphics.beginFill("white");
+        bg.graphics.drawRoundRect(0, 0, width, height, 20, 20);
+        bg.graphics.beginStroke(keyColor);
+        bg.graphics.drawRoundRect(0, 0, width, height, 20, 20);
+        button.addChild(bg);
+
+        // 通常時の座布団を作成
+        var bgUp = new createjs.Shape();
+        // グラフィックを作成
+        button.addChild(bgUp);
+        bgUp.visible = true; // 表示する
+
+        // ロールオーバー時の座布団を作成
+        var bgOver = new createjs.Shape();
+        bgOver.graphics.beginFill(rollOverColor);
+        bgOver.graphics.drawRoundRect(0, 0, width, height, 20, 20);
+        // グラフィックを作成
+        bgOver.visible = false; // 非表示にする
+        button.addChild(bgOver);
+
+        var label = new createjs.Text(text, "24px sans-serif", keyColor);
+        label.textAlign = "center";
+        label.textBaseline = "middle";
+        label.x = width / 2;
+        label.y = height / 2;
+        button.addChild(label);
+
+        // ロールオーバーイベントを登録
+        button.addEventListener("mouseover", handleMouseOver);
+        button.addEventListener("mouseout", handleMouseOut);
+        function handleMouseOver(event) {
+            bgUp.visble = false;
+            bgOver.visible = true;
+            //label.color = "white";
+        }
+        function handleMouseOut(event) {
+            bgUp.visble = true;
+            bgOver.visible = false;
+            //label.color = keyColor;
+        }
+
+        return button;
+      }
+
+      function createSection(question, buttonTexts, sectionNum){
+        var section = new createjs.Container();
+
+        // 問題部分
+        var questionText = new createjs.Text(question, "24px serif", "black");
+        section.addChild(questionText);
+
+
+        var verticalSpace = 40;
+        var horizontalSpace = 300;
+        var buttonWidth = 250;
+
+        var buttons = new Array(4);
+        // 回答部分
+        for(i = 0; i < buttons.length; i++){
+            switch(i){
+                case 0:
+                    buttons[i] = createButton(buttonTexts[i], buttonWidth, 80, "#662222", "#dddddd");
+                    break;
+                case 1:
+                    buttons[i] = createButton(buttonTexts[i], buttonWidth, 80, "#226622", "#dddddd");
+                    break;
+                case 2:
+                    buttons[i] = createButton(buttonTexts[i], buttonWidth, 80, "#666622", "#dddddd");
+                    break;
+                case 3:
+                    buttons[i] = createButton(buttonTexts[i], buttonWidth, 80, "#222266", "#dddddd");
+                    break;
+            }
+            
+            if(i > 0){
+                buttons[i].x = buttons[i-1].x + horizontalSpace;
+            }
+
+            buttons[i].y = questionText.y + verticalSpace;
+
+            section.addChild(buttons[i]);
+        }
+
+        /*
+        var checkMark = new createjs.Shape();
+        checkMark.graphics.beginFill("red");
+        checkMark.graphics.drawCircle(0, 0, 20);
+        checkMark.visible = false;
+        section.addChild(checkMark);
+        */
+        var checkMark = new createjs.Bitmap(queue.getResult("image1"));
+        checkMark.regX = checkMark.getBounds().width / 2;
+        checkMark.regY = checkMark.getBounds().height / 2;
+        checkMark.scaleX = 0.5;
+        checkMark.scaleY = 0.5;
+        checkMark.visible = false;
+        section.addChild(checkMark);
+
+        // それぞれのボタンを押したときの処理
+        buttons[0].addEventListener("click", OnClickButton0);
+        function OnClickButton0(event){
+            answers[sectionNum] = 0;
+            checkMark.visible = true;
+            checkMark.x = section.x;
+            checkMark.y = 2 * buttons[0].y;
+        }
+
+        buttons[1].addEventListener("click", OnClickButton1);
+        function OnClickButton1(event){
+            answers[sectionNum] = 1;
+            checkMark.visible = true;
+            checkMark.x = buttons[1].x + section.x;
+            checkMark.y = 2 * buttons[1].y;
+        }
+
+        buttons[2].addEventListener("click", OnClickButton2);
+        function OnClickButton2(event){
+            answers[sectionNum] = 2;
+            checkMark.visible = true;
+            checkMark.x = buttons[2].x + section.x
+            checkMark.y = 2 * buttons[2].y;
+        }
+
+        buttons[3].addEventListener("click", OnClickButton3);
+        function OnClickButton3(event){
+            answers[sectionNum] = 3;
+            checkMark.visible = true;
+            checkMark.x = buttons[3].x + section.x;
+            checkMark.y = 2 * buttons[3].y;
+        }
+
+
+        return section;
+      }
+  </script>
+  <style>
+    canvas#myCanvas{
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="myCanvas" width="1920" height="1080"></canvas>
+</body>
+</html>
