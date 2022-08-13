@@ -174,32 +174,32 @@
             var verticalSpace = 150;
 
             if(gameMode == 1){
-                var buttonTexts_0 = new Array("ABC", "ABD", "BCD", "DBD");
-                var section1 = createSection("Q1. DBDとはなんの略？", buttonTexts_0, 0);
+                var buttonTexts_0 = new Array("1 対 2", "1 対 4", "1 対 9", "1 対 100");
+                var section1 = createSection("Q1. DBDは何対何の非対称ゲーム？", buttonTexts_0, 0);
                 section1.x = leftMargin;
                 section1.y = topMargin;
                 mainCanvas.addChild(section1);
 
-                var buttonTexts_1 = new Array("全年齢対象", "R-15", "R-18", "R-81");
-                var section2 = createSection("Q2. DBDのレーティングは何？", buttonTexts_1, 1);
+                var buttonTexts_1 = new Array("全年齢対象", "12才以上対象", "15才以上対象", "18才以上対象");
+                var section2 = createSection("Q2. DBDのCEROレーティング区分は何？", buttonTexts_1, 1);
                 section2.x = leftMargin;
                 section2.y = section1.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section2);
 
-                var buttonTexts_2 = new Array("全年齢対象", "R-15", "R-18", "R-81")
-                var section3 = createSection("Q3. テスト", buttonTexts_2, 2);
+                var buttonTexts_2 = new Array("ゆっくり乗り越える", "破壊する", "板を起こす", "すばやく乗り越える")
+                var section3 = createSection("Q3. 生存者が倒れた板に対して行えないアクションはどれ？", buttonTexts_2, 2);
                 section3.x = leftMargin;
                 section3.y = section2.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section3);
 
-                var buttonTexts_3 = new Array("全年齢対象", "R-15", "R-18", "R-81")
-                var section4 = createSection("Q3. テスト", buttonTexts_3, 3);
+                var buttonTexts_3 = new Array("武器についた血を拭う", "生存者に謝る", "生存者を追いかける", "発電機の巡回")
+                var section4 = createSection("Q4. 殺人鬼は生存者に通常攻撃をヒットさせた後に何をする必要がある？", buttonTexts_3, 3);
                 section4.x = leftMargin;
                 section4.y = section3.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section4);
 
-                var buttonTexts_4 = new Array("全年齢対象", "R-15", "R-18", "R-81")
-                var section5 = createSection("Q3. テスト", buttonTexts_4, 4);
+                var buttonTexts_4 = new Array("8", "3", "5", "7")
+                var section5 = createSection("Q5. 脱出ゲートを開けるために4人の生存者が点けなければならない発電機は何台？", buttonTexts_4, 4);
                 section5.x = leftMargin;
                 section5.y = section4.y + verticalSpace + topMargin;
                 mainCanvas.addChild(section5);
@@ -320,13 +320,6 @@
             section.addChild(buttons[i]);
         }
 
-        /*
-        var checkMark = new createjs.Shape();
-        checkMark.graphics.beginFill("red");
-        checkMark.graphics.drawCircle(0, 0, 20);
-        checkMark.visible = false;
-        section.addChild(checkMark);
-        */
         var checkMark = new createjs.Bitmap(queue.getResult("image1"));
         checkMark.regX = checkMark.getBounds().width / 2;
         checkMark.regY = checkMark.getBounds().height / 2;
@@ -335,13 +328,14 @@
         checkMark.visible = false;
         section.addChild(checkMark);
 
+        var checkMarkYOffset = 40;
         // それぞれのボタンを押したときの処理
         buttons[0].addEventListener("click", OnClickButton0);
         function OnClickButton0(event){
             answers[sectionNum] = 0;
             checkMark.visible = true;
             checkMark.x = section.x;
-            checkMark.y = 2 * buttons[0].y;
+            checkMark.y = 2 * buttons[0].y + checkMarkYOffset;
         }
 
         buttons[1].addEventListener("click", OnClickButton1);
@@ -349,7 +343,7 @@
             answers[sectionNum] = 1;
             checkMark.visible = true;
             checkMark.x = buttons[1].x + section.x;
-            checkMark.y = 2 * buttons[1].y;
+            checkMark.y = 2 * buttons[1].y + checkMarkYOffset;
         }
 
         buttons[2].addEventListener("click", OnClickButton2);
@@ -357,7 +351,7 @@
             answers[sectionNum] = 2;
             checkMark.visible = true;
             checkMark.x = buttons[2].x + section.x
-            checkMark.y = 2 * buttons[2].y;
+            checkMark.y = 2 * buttons[2].y + checkMarkYOffset;
         }
 
         buttons[3].addEventListener("click", OnClickButton3);
@@ -365,7 +359,7 @@
             answers[sectionNum] = 3;
             checkMark.visible = true;
             checkMark.x = buttons[3].x + section.x;
-            checkMark.y = 2 * buttons[3].y;
+            checkMark.y = 2 * buttons[3].y + checkMarkYOffset;
         }
 
 
