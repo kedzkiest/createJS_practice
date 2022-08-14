@@ -364,6 +364,28 @@
         }
 
         function InitResult(){
+            // 受けた難易度の表示
+            var diffTextContainer = new createjs.Container();
+            var diffText_0 = new createjs.Text("DBDクイズ", "80px sans-serif", "#cccccc");
+            diffText_0.y = stage.canvas.height / 8;
+            if(gameMode == 1){
+                var diffText_1 = new createjs.Text("かんたん", "80px sans-serif", "#66ff66");
+            }
+            else if(gameMode == 2){
+                var diffText_1 = new createjs.Text("ふつう", "80px sans-serif", "#6666ff");
+            }
+            else if(gameMode == 3){
+                var diffText_1 = new createjs.Text("むずかしい", "80px sans-serif", "#ff6666");
+            }
+            diffText_1.x = stage.canvas.width / 4;
+            diffText_1.y = stage.canvas.height / 8;
+
+            diffTextContainer.addChild(diffText_0);
+            diffTextContainer.addChild(diffText_1);
+
+            diffTextContainer.x = stage.canvas.width / 3.5;
+            resultCanvas.addChild(diffTextContainer);
+
             // リザルトテキストの表示
             if(score < 3){
                 var resultText = new createjs.Text("あなたは5問中  問正解しました!\n次はもっと頑張ろう!", "120px sans-serif", "black");
