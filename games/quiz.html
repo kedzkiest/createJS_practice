@@ -365,7 +365,15 @@
 
         function InitResult(){
             // リザルトテキストの表示
-            var resultText = new createjs.Text("あなたは5問中  問正解しました!\nおめでとう!", "120px sans-serif", "black");
+            if(score < 3){
+                var resultText = new createjs.Text("あなたは5問中  問正解しました!\n次はもっと頑張ろう!", "120px sans-serif", "black");
+            }
+            else if(score < 5){
+                var resultText = new createjs.Text("あなたは5問中  問正解しました!\nおめでとう!", "120px sans-serif", "black");
+            }
+            else{
+                var resultText = new createjs.Text("あなたは5問中  問正解しました!\nすばらしい!", "120px sans-serif", "black");
+            }
             var scoreText = new createjs.Text(score, "120px sans-serif", "red");
             resultText.x = stage.canvas.width / 2;
             resultText.y = stage.canvas.height / 2;
