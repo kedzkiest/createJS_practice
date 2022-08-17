@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>shooting</title>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script>
+        // ロードが終わったときに呼ばれる関数を登録
+        window.addEventListener("load", init);
+
+        // キーを押した時に呼ばれる関数を登録
+        window.addEventListener("keydown", handleKeydown);
+        // キーを離した時に呼ばれる関数を登録
+        window.addEventListener("keyup", handleKeyUp);
+
+        const SPACE = 32;
+        const LEFT = 37;
+        const UP = 38;
+        const RIGHT = 39;
+        const DOWN = 40;
+
+        let isSpace = false;
+        let isLeft = false;
+        let isUp = false;
+        let isRight = false;
+        let isDown = false;
+
+        function handleKeydown(event){ 
+            // キーが押された時の処理
+            let keyCode = event.keyCode;
+            if (keyCode === SPACE) {
+                isSpace = true;
+            }
+            else if (keyCode === LEFT) {
+                isLeft = true;
+            }
+            else if (keyCode === UP) {
+                isUp = true;
+            }
+            else if (keyCode === RIGHT) {
+                isRight = true;
+            }
+            else if (keyCode === DOWN) {
+                isDown = true;
+            }
+        }
+
+        function handleKeyUp(event) { 
+            // キーを離した時の処理
+            let keyCode = event.keyCode;
+            if (keyCode === SPACE) {
+                isSpace = false;
+            }
+            else if (keyCode === LEFT) {
+                isLeft = false;
+            }
+            else if (keyCode === UP) {
+                isUp = false;
+            }
+            else if (keyCode === RIGHT) {
+                isRight = false;
+            }
+            else if (keyCode === DOWN) {
+                isDown = false;
+            }
+        }
+
+        let queue = new createjs.LoadQueue();
+          
+
+        /////////////////////////////////////////////////////////////////////////////////
+        // ここから上はさわらない
+
+        function init() {
+            let stage = new createjs.Stage("myCanvas");
+
+            // スコアを格納する変数
+            let score = 0;
+
+            queue.loadManifest([
+                {id: 'player', src: 'img/touhou.png'}
+            ]);
+
+            // どのキャンバスを見せるかをコントロールするフラグ
+            // 初めはタイトルからスタート
+            let titleCanvas_enabled = true;
+            let mainCanvas_enabled = false;
+            let resultCanvas_enabled = false;
+
+            // それぞれのキャンバス（画面）
+            let titleCanvas = new createjs.Container();
+            stage.addChild(titleCanvas);
+
+            let mainCanvas = new createjs.Container();
+            stage.addChild(mainCanvas);
+
+            let resultCanvas = new createjs.Container();
+            stage.addChild(resultCanvas);
+
+            // タイトル画面を初期化
+            InitTitle();
+
+            // 毎フレーム呼ばれる関数を登録
+            createjs.Ticker.addEventListener("tick", handleTick);
+            createjs.Ticker.timingMode = createjs.Ticker.RAF;
+
+            // ゲーム全体で走らせたい処理を書く
+            function handleTick(){
+                stage.update();
+
+                // キャンバスの表示・非表示切り替え
+                titleCanvas.visible = titleCanvas_enabled ? true : false;
+                mainCanvas.visible = mainCanvas_enabled ? true : false;
+                resultCanvas.visible = resultCanvas_enabled ? true : false;
+            }
+            
+
+
+
+
+
+
+
+
+
+
+            // タイトル画面
+            ////////////////////////////////////////////////////////////////////////////////
+
+            function InitTitle(){
+                // 画像を持ってきてから
+                //let bg = new createjs.Bitmap("img/back.gif");
+
+                // タイトルに背景を追加
+                bg = new createjs.Shape();
+                
+                bg.x=stage.canvas.width/2;
+                bg.y=stage.canvas.height/2;
+                bg.textAlign = "center";
+                titleCanvas.addChild(bg);
+
+                //　タイトルにゲームタイトルを追加
+                let titleText = new createjs.Text("シューティングゲーム", "50px serif","blue");
+                titleText.x=stage.canvas.width/2;
+                titleText.y=stage.canvas.height/3;
+                titleText.textAlign = "center";
+                titleCanvas.addChild(titleText);
+
+                // タイトルに指示文（ゲームの始め方）を追加
+                let instructionText = new createjs.Text("スペースキーを押して開始", "40px serif","blue");
+                instructionText.x=stage.canvas.width/2;
+                instructionText.y=stage.canvas.height*4/5;
+                instructionText.textAlign = "center";
+                titleCanvas.addChild(instructionText);
+
+                // タイトル画面で毎フレーム呼ばれる関数を登録
+                createjs.Ticker.addEventListener("tick",titleTick);
+
+
+                // タイトルだけで毎フレーム走らせたい処理を書く
+                function titleTick(){
+                    // タイトル画面でなければ処理しない
+                    if(titleCanvas_enabled === false) return;
+
+                    // タイトル画面でスペースが押されたときだけ、タイトルからメインに移る
+                    if(isSpace===true){
+                        titleCanvas_enabled = false;
+                        mainCanvas_enabled = true;
+
+                        //　メイン画面を初期化
+                        InitMain();
+                    }
+
+                    stage.update();
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+            // メイン画面
+            //////////////////////////////////////
+
+            function InitMain(){
+                // 敵を格納する配列
+                let enemyList = [];
+                // 弾を格納する配列
+                let bulletList = [];
+
+                //　毎フレーム加算されるカウンタ
+                let count = 0;
+                
+                //　スコアの初期化
+                score = 0;
+                // スコアを表示するテキスト
+                let scoreText = new createjs.Text(score,"24px serif","white");
+                scoreText.x = 880;
+                scoreText.y = 100;
+
+                //　メイン画面の背景を追加
+                let bg = new createjs.Shape();
+                bg.graphics.beginFill("black").drawRect(0,0,800,540);
+                mainCanvas.addChild(bg);
+
+                // メイン画面にスコア部分の背景を追加
+                let scorebg = new createjs.Shape();
+                scorebg.graphics.beginFill("gray").drawRect(800,0,960,540);
+                mainCanvas.addChild(scorebg);
+
+                //　メイン画面にプレイヤーの画像を読み込み、大きさを調整
+                let player = new createjs.Bitmap(queue.getResult("player"));
+                player.scaleX=0.2;
+                player.scaleY=0.2;
+                player.crossOrigin="Anonymous"; 
+                player.regX = player.getBounds().width / 2;
+                player.regY = player.getBounds().height / 2;
+                mainCanvas.addChild(player);
+
+                //　スコア部分の背景よりも上になるように、この段階でスコアテキストを追加
+                mainCanvas.addChild(scoreText);
+
+                //　残機（ストック）を保管する変数
+                let life = 5;
+
+                // スコア部分の背景よりも上になるように、この段階で残機テキストを追加
+                let lifeText =new createjs.Text(life,"24px serif","white");
+                lifeText.x = 870
+                lifeText.y = 400
+                mainCanvas.addChild(lifeText);
+                
+
+                //　メイン画面でクリックした時に呼ばれる関数を登録
+                mainCanvas.addEventListener("click", handleClick);
+                //　メイン画面で毎フレーム呼ばれる関数を登録
+                createjs.Ticker.addEventListener("tick", mainTick);
+
+                // マウスクリックで弾を撃つ
+                function handleClick() {
+                    let bullet = new createjs.Shape();
+                    bullet.graphics.beginFill("white").drawCircle(0, 0, 3);
+                    bullet.x = player.x;
+                    bullet.y = player.y;
+
+                    bulletList.push(bullet);
+                    mainCanvas.addChild(bullet);
+                }
+
+                // メイン画面で毎フレーム走らせたい処理を書く
+                function mainTick(){
+                    if(mainCanvas.contains(player) === false) return;
+                    // メイン画面でなければ処理しない
+                    if(mainCanvas_enabled === false) return;
+
+                    console.log(mainCanvas.numChildren);
+
+                    // カウンターは毎フレーム増える
+                    count = count + 1;
+
+                    // プレイヤーの移動
+                    if(isLeft === true){
+                        player.x -= 3;
+                    }
+                    if(isUp === true){
+                        player.y -= 3;
+                    }
+                    if(isRight === true){
+                        player.x += 3;
+                    }
+                    if(isDown === true){
+                        player.y += 3;
+                    }
+
+                    // スペースキーが押されている間、弾を撃ち続ける
+                    if(isSpace === true){
+                        let bullet = new createjs.Shape();
+                        bullet.graphics.beginFill("red").drawCircle(0, 0, 3);
+                        bullet.x = player.x;
+                        bullet.y = player.y;
+
+                        bulletList.push(bullet);
+                        mainCanvas.addChild(bullet);
+                    }
+
+                    // スコアテキストの表示を更新
+                    scoreText.text = score;
+
+                    // 残機テキストの表示を更新
+                    lifeText.text = life;
+
+                    //　ザコ敵の生成（スポーン）
+                    if(count % 50 === 0){
+                        let enemy = new createjs.Shape();
+                        enemy.graphics.beginFill("red").drawCircle(0,0,10);
+
+                        enemy.x = 795;
+                        enemy.y = 540 * Math.random();
+
+                        mainCanvas.addChild(enemy);
+                        enemyList.push(enemy);
+                    }
+
+                    //　ザコ敵の移動
+                    for(let i = 0; i < enemyList.length; i++){
+                        enemyList[i].x -= 2;
+                    }
+
+                    //　プレイヤーが撃った弾の移動
+                    for(let i = 0; i < bulletList.length; i++){
+                        bulletList[i].x += 10;
+                    }
+
+                    //　プレイヤーが画面外に行かないようにする
+                    if(player.y <= 0 + player.getBounds().height / 10){
+                        player.y = 0 + player.getBounds().height / 10;
+                    }
+                    if(540 - player.getBounds().height / 10 <= player.y){
+                        player.y = 540 - player.getBounds().height / 10;
+                    }
+                    if(player.x <= 0 + player.getBounds().width / 10){
+                        player.x = player.getBounds().width / 10;
+                    }
+                    if(800 - player.getBounds().width / 10 <= player.x){
+                        player.x = 800 - player.getBounds().width / 10;
+                    }
+
+                    //　ゲームオーバー処理（敵とプレイヤーの当たり判定を取る）
+                    for (let i = 0 ;i < enemyList.length; i++){
+                        // 敵から見たプレイヤーの相対位置を取得
+                        let enemyLocal = enemyList[i].localToLocal(0,0, player);
+
+                        // プレイヤーが敵とぶつかったら
+                        if(player.hitTest(enemyLocal.x, enemyLocal.y)){
+                            // 残機を1減らす
+                            life--;
+
+                            // メイン画面から敵を消す
+                            mainCanvas.removeChild(enemyList[i]);
+
+                            // 敵を格納している配列から、ぶつかった敵を削除
+                            enemyList.splice(i,1);
+
+                            // 残機がなくなったらゲームオーバー
+                            if(life === 0){
+                                gameOver();
+                            }
+                        }
+                    }
+                    
+
+                    //　敵を倒す処理（敵とプレイヤーの撃った弾の当たり判定を取る）
+                    for(let i = 0;i < bulletList.length; i++){
+                        for(let j = 0; j < enemyList.length; j++){
+                            // すべての敵に対し、それぞれの弾から見た相対位置を取得
+                            let localPoint = bulletList[i].localToLocal(0,0,enemyList[j]);
+
+                            // 弾が敵とぶつかったら
+                            if(enemyList[j].hitTest(localPoint.x, localPoint.y)){
+                                // メイン画面から敵を消す
+                                mainCanvas.removeChild(bulletList[i]);
+
+                                // 敵を格納している配列から、ぶつかった敵を削除
+                                bulletList.splice(i, 1);
+
+                                // メイン画面から弾を消す
+                                mainCanvas.removeChild(enemyList[j]);
+
+                                // 弾を格納している配列から、ぶつかった弾を削除
+                                enemyList.splice(j, 1);
+
+                                // 敵を倒すたびにスコアが増える
+                                score += 100;
+                            }
+                        }
+                    }
+
+
+                    // ステージの更新は毎フレーム走る
+                    stage.update();
+                }
+
+                // ゲームオーバーになったらリザルトに移る
+                function gameOver(){
+                    mainCanvas_enabled = false;
+                    resultCanvas_enabled = true;
+
+                    // メイン画面にあるすべてのものを削除
+                    mainCanvas.removeAllChildren();
+
+                    // リザルト画面を初期化
+                    InitResult();
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+            // リザルト画面
+            ///////////////////////////////////////
+            function InitResult(){
+                //　リザルト画面にクリアテキストを追加
+                let resultText = new createjs.Text("clear","80px sans-serif","black");
+                resultText.x = stage.canvas.width/2;
+                resultText.y = stage.canvas.height/3;
+                resultText.textAlign = "center";
+                resultCanvas.addChild(resultText);
+
+                // リザルト画面にスコアテキストを追加
+                let scoreText = new createjs.Text("score: " + score,"60px sans-serif","red");
+                scoreText.x = stage.canvas.width/2;
+                scoreText.y = stage.canvas.height/2;
+                scoreText.textAlign = "center";
+                resultCanvas.addChild(scoreText);
+
+                // ボタンの横幅を決める
+                var btnW = 240; 
+                // ボタンの縦幅を決める
+                var btnH = 50;
+                
+                // 新しくボタン（コンテナ）を作成し、リザルト画面に追加
+                var button = new createjs.Container();
+                button.x = 350;
+                button.y = 350;
+                resultCanvas.addChild(button);
+                
+                // ボタンの背景を作成、枠線の太さ、枠線の色、塗りつぶしの色、塗りつぶしの形を決める
+                // その後ボタンコンテナに追加
+                var bg = new createjs.Shape();
+                bg.graphics
+                .setStrokeStyle(1)
+                .beginStroke("#696969")
+                .beginFill("white")
+                .drawRoundRect(0, 0, btnW, btnH, 3);
+                button.addChild(bg);
+
+                // ボタンの文字を作成、ボタンコンテナに追加
+                var label = new createjs.Text("Button", "24px sans-serif", "#000000");
+                label.x = btnW / 2;
+                label.y = btnH / 2;
+                label.textAlign = "center";
+                label.textBaseline = "middle";
+                button.addChild(label);
+
+                // ボタンクリック時にタイトルに戻る
+                button.addEventListener("click",handleClick);
+                function handleClick(event){
+                    resultCanvas_enabled = false;
+                    titleCanvas_enabled = true;
+
+                    // リザルト画面にある全てのものを削除
+                    resultCanvas.removeAllChildren();
+                }
+
+
+                // リザルト画面で毎フレーム呼ばれる関数を登録
+                createjs.Ticker.addEventListener("tick", resultTick);
+
+                // リザルト画面で毎フレーム走らせたい処理を書く
+                function resultTick(){
+                    // リザルト画面でなければ処理しない
+                    if(resultCanvas_enabled === false) return;
+
+                    stage.update();
+                }
+            }
+            
+        }
+    </script>
+</head>
+<body>
+    <canvas id="myCanvas" width="960" height="540"></canvas>
+</body>
+</html>
