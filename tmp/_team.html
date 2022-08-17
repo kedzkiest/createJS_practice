@@ -188,10 +188,14 @@
             //////////////////////////////////////
 
             function InitMain(){
-                // 敵を格納する配列
+                // ザコ敵を格納する配列
                 let enemyList = [];
+                // ボスを格納する配列
+                let bossList=[];
                 // 弾を格納する配列
                 let bulletList = [];
+
+                let bosshp = [10, 20];
 
                 //　毎フレーム加算されるカウンタ
                 let count = 0;
@@ -253,11 +257,12 @@
 
                 // メイン画面で毎フレーム走らせたい処理を書く
                 function mainTick(){
+                    // ステージの更新は毎フレーム走る
+                    stage.update();
+
                     if(mainCanvas.contains(player) === false) return;
                     // メイン画面でなければ処理しない
                     if(mainCanvas_enabled === false) return;
-
-                    console.log(mainCanvas.numChildren);
 
                     // カウンターは毎フレーム増える
                     count = count + 1;
@@ -305,6 +310,19 @@
                         enemyList.push(enemy);
                     }
 
+                    // ボスの生成（スポーン）
+                    if(count%500===0){
+                        let boss=new createjs.Shape();
+                        boss.graphics.beginFill("red").drawCircle(0,0,30);
+                        
+                        boss.x = 795;
+                        boss.y = 540*Math.random();
+        
+                        mainCanvas.addChild(boss);
+                        bossList.push(boss);
+                        bosshp.push(30);
+                    }
+
                     //　ザコ敵の移動
                     for(let i = 0; i < enemyList.length; i++){
                         enemyList[i].x -= 2;
@@ -329,7 +347,7 @@
                         player.x = 800 - player.getBounds().width / 10;
                     }
 
-                    //　ゲームオーバー処理（敵とプレイヤーの当たり判定を取る）
+                    //　ゲームオーバー処理（ザコ敵とプレイヤーの当たり判定を取る）
                     for (let i = 0 ;i < enemyList.length; i++){
                         // 敵から見たプレイヤーの相対位置を取得
                         let enemyLocal = enemyList[i].localToLocal(0,0, player);
@@ -338,6 +356,8 @@
                         if(player.hitTest(enemyLocal.x, enemyLocal.y)){
                             // 残機を1減らす
                             life--;
+
+                            player.alpha = life/5;
 
                             // メイン画面から敵を消す
                             mainCanvas.removeChild(enemyList[i]);
@@ -351,11 +371,25 @@
                             }
                         }
                     }
-                    
 
+                    // ゲームオーバー処理（ボスとプレイヤーの当たり判定を取る）
+                    for(let i=0;i<bossList.length;i++){
+                        // ボスから見たプレイヤーの相対位置を取得
+                        let bossLocal=bossList[i].localToLocal(0,0,player);
+
+                        // プレイヤーがボスとぶつかったら
+                        if(player.hitTest(bossLocal.x,bossLocal.y)){
+                            gameOver();
+                        }
+                    }
+                    
                     //　敵を倒す処理（敵とプレイヤーの撃った弾の当たり判定を取る）
                     for(let i = 0;i < bulletList.length; i++){
                         for(let j = 0; j < enemyList.length; j++){
+
+                            // 画面上に弾が一発だけのときに弾が敵に当たるとエラーになるのを回避
+                            if(mainCanvas.contains(bulletList[i]) === false) break;
+
                             // すべての敵に対し、それぞれの弾から見た相対位置を取得
                             let localPoint = bulletList[i].localToLocal(0,0,enemyList[j]);
 
@@ -364,13 +398,13 @@
                                 // メイン画面から敵を消す
                                 mainCanvas.removeChild(bulletList[i]);
 
-                                // 敵を格納している配列から、ぶつかった敵を削除
+                                // 弾を格納している配列から、ぶつかった弾を削除
                                 bulletList.splice(i, 1);
 
                                 // メイン画面から弾を消す
                                 mainCanvas.removeChild(enemyList[j]);
 
-                                // 弾を格納している配列から、ぶつかった弾を削除
+                                // 敵を格納している配列から、ぶつかった敵を削除
                                 enemyList.splice(j, 1);
 
                                 // 敵を倒すたびにスコアが増える
@@ -379,9 +413,43 @@
                         }
                     }
 
+                    // ボスを倒す処理（ボスとプレイヤーの撃った弾の当たり判定を取る）
+                    for(let i=0;i<bulletList.length;i++){
+                        for(let j=0;j<bossList.length;j++){
+                            
+                            // 画面上に弾が一発だけのときに弾が敵に当たるとエラーになるのを回避
+                            if(mainCanvas.contains(bulletList[i]) === false) break;
+                            
+                            // すべてのボスに対し、それぞれの弾から見た相対位置を取得
+                            let localPoint=bulletList[i].localToLocal(0,0,bossList[j]);
 
-                    // ステージの更新は毎フレーム走る
-                    stage.update();
+                            // 弾がボスとぶつかったら
+                            if(bossList[j].hitTest(localPoint.x,localPoint.y)){
+                                console.log(bosshp);
+                                // ボスの体力を減らす
+                                bosshp[j]--;
+
+                                // メイン画面から弾を消す
+                                mainCanvas.removeChild(bulletList[i]);
+
+                                // 弾を格納している配列から、ぶつかった弾を削除
+                                bulletList.splice(i,1);
+        
+                                // ボスの体力がなくなったら
+                                if(bosshp[j] === 0){
+                                    // メイン画面からボスを消す
+                                    mainCanvas.removeChild(bossList[j]);
+
+                                    // ボスを格納している配列から、体力のなくなったボスを削除
+                                    bossList.splice(j,1);
+                                    bosshp.splice(j,1);
+
+                                    // ボスを倒すたびにスコアが増える
+                                    score += 500;
+                                }
+                            }
+                        }
+                    }
                 }
 
                 // ゲームオーバーになったらリザルトに移る
