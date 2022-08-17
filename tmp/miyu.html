@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+ <meta charset="UTF-8">
+ <title>shooting</title>
+ <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+    <script>
+     //createJSの読み込みが終わってから、init関数をよぶ。
+        window.addEventListener("load",init);
+        
+        function init(){
+            let stage = new createjs.Stage("myCanvas");
+
+            let result = new createjs.Container();
+            stage.addChild(result);
+
+            InitResult();
+
+            createjs.Ticker.setFPS(60);
+            createjs.Ticker.addEventListener("tick",handleTick);
+
+
+            function handleTick(){
+                stage.update();
+            }
+
+            function InitResult(){
+                let resultText = new createjs.Text("clear","80px sans-serif","black");
+                resultText.x = stage.canvas.width/2;
+                resultText.y = stage.canvas.height/3;
+                resultText.textAlign = "center";
+                result.addChild(resultText);
+
+                let scoreText = new createjs.Text("score","60px sans-serif","red");
+                scoreText.x = stage.canvas.width/2;
+                scoreText.y = stage.canvas.height/2;
+                scoreText.textAlign = "center";
+                result.addChild(scoreText);
+
+                var btnW = 240; 
+                var btnH = 50;
+                
+                var button = new createjs.Container();
+                button.x = 350;
+                button.y = 350;
+                result.addChild(button);
+                
+                var bg = new createjs.Shape();
+                bg.graphics
+                .setStrokeStyle(1)
+                .beginStroke("#696969")
+                .beginFill("white")
+                .drawRoundRect(0, 0, btnW, btnH, 3);
+                button.addChild(bg);
+
+                var label = new createjs.Text("Button", "24px sans-serif", "#000000");
+                label.x = btnW / 2;
+                label.y = btnH / 2;
+                label.textAlign = "center";
+                label.textBaseline = "middle";
+                button.addChild(label);
+
+                button.addEventListener("click",handleClick);
+                function handleClick(event){
+                    result.visible = false;
+                }
+            }
+        }
+
+    </script>
+</head>
+<body>
+<canvas id="myCanvas"width="960"height="540"></canvas>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>shooting</title>
+        <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+        <script>
+            //createJSの読み込みが終わってから、init関数をよぶ。
+            window.addEventListener("load",init);
+
+            function init(){
+                let stage = new createjs.Stage("myCanvas");
+
+                let title = new createjs.Container();
+                stage.addChild(title);
+
+                InitTitle();
+       
+                createjs.Ticker.setFPS(60);
+                createjs.Ticker.addEventListener("tick",handleTick);
+
+                function handleTick(){
+                    
+                    stage.update();
+
+                }
+
+                function InitTitle(){
+                    let bg = new createjs.Bitmap("img/back.gif");
+                    bg.x=stage.canvas.width/2;
+                    bg.y=stage.canvas.height/2;
+                    bg.textAlign = "center";
+                    title.addChild(bg);
+
+                    let titleText = new createjs.Text("シューティングゲーム", "50px serif","blue");
+                    titleText.x=stage.canvas.width/2;
+                    titleText.y=stage.canvas.height/3;
+                    titleText.textAlign = "center";
+                    title.addChild(titleText);
+
+                    let a = new createjs.Text("スペースキーを押して開始", "40px serif","blue");
+                    a.x=stage.canvas.width/2;
+                    a.y=stage.canvas.height*4/5;
+                    a.textAlign = "center";
+                    title.addChild(a);
+
+                    window.addEventListener("keydown",handleKeyDown);
+                    window.addEventListener("keyup",handleKeyUp);
+
+                    const SPACE=32;
+
+                    let isSpace=false;
+
+                    function handleKeyDown(event){
+                        let keyCode = event.keyCode;
+
+                        if(keyCode===SPACE){
+                            isSpace = true;
+                        }
+                    }
+                    function handleKeyUp(event){
+                        let keyCode = event.keyCode;
+                        if(keyCode===SPACE){
+                            isSpace = false; 
+                        }
+                    }
+
+                    createjs.Ticker.addEventListener("tick",titleTick);
+
+                    function titleTick(){
+                        if(isSpace===true){
+                            console.log("hei");
+                            title.visible=false;
+                        }
+                        stage.update();
+
+                    }
+                }
+            }
+    </script>
+    </head>
+        <body>
+            <canvas id="myCanvas" width="960" height="540"></canvas>
+
+        </body>
+</html>

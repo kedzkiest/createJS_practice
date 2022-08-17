@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>shooting</title>
+    <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
+<script>
+
+    window.addEventListener("load",init);
+
+    function init(){
+        let stage=new createjs.Stage("myCanvas");
+        let count=0;
+        let enemyList=[];
+        let bulletList=[];
+        let bossList=[];
+
+
+        let bg=new createjs.Shape();
+        bg.graphics.beginFill("skyblue").drawRect(0,0,960,540);
+        stage.addChild(bg);
+
+        let player=new createjs.Bitmap('img/touhou.png');
+        player.scaleX=0.5;
+        player.scaleY=0.5;
+        player.crossOrigin="Anonymous";
+
+        player.regX=player.getBounds().width/2;
+        player.regY=player.getBounds().height/2;
+
+        stage.addChild(player);
+
+        stage.addEventListener("click",handleClick);
+
+        createjs.Ticker.setFPS(50);
+        createjs.Ticker.addEventListener("tick",handleTick);
+
+        function handleClick(){
+                let bullet=new createjs.Shape();
+                bullet.graphics.beginFill("white").drawCircle(0,0,3);
+                bullet.x=player.x;
+                bullet.y=player.y;
+
+                bulletList.push(bullet);
+                stage.addChild(bullet);
+        }
+
+        window.addEventListener("keydown",handleKeyDown);
+        window.addEventListener("keyup",handleKeyUp);
+
+        const SPACE=32;
+        const LEFT=65;
+        const UP=87;
+        const RIGHT=68;
+        const DOWN=83;
+        const LEFTt=37
+        const UPp=38;
+        const DOWNn=40;
+        const RIGTHt=39;
+
+        let isSpace=false;
+        let isLeft=false;
+        let isUp=false;
+        let isRight=false;
+        let isDown=false;
+
+        function handleKeyDown(event){
+            let keyCode=event.keyCode;
+
+            if(keyCode===SPACE){
+                    isSpace=true;
+            }
+            else if(keyCode===LEFT){
+                    isLeft=true;
+            }
+            else if(keyCode===UP){
+                    isUp=true;
+            }
+            else if(keyCode===RIGHT){
+                    isRight=true;
+            }
+            else if(keyCode===DOWN){
+                    isDown=true;
+            }
+            else if(keyCode===LEFTt){
+                    isLeft=true;
+            }
+            else if(keyCode===UPp){
+                    isUp=true;
+            }
+            else if(keyCode===DOWNn){
+                    isDown=true;
+            }
+            else if(keyCode===RIGTHt){
+                    isRight=true;
+            }
+        }
+
+        function handleKeyUp(event){
+            let keyCode=event.keyCode;
+
+            if(keyCode===SPACE){
+                isSpace=false;
+            }
+            else if(keyCode===LEFT){
+                isLeft=false;
+            }
+            else if(keyCode===UP){
+                isUp=false;
+            }
+            else if(keyCode===RIGHT){
+                isRight=false;
+            }
+            else if(keyCode===DOWN){
+                isDown=false;
+            }
+            else if(keyCode===LEFTt){
+                isLeft=false;
+            }
+            else if(keyCode===UPp){
+                isUp=false;
+            }
+            else if(keyCode===DOWNn){
+                isDown=false;
+            }
+            else if(keyCode===RIGTHt){
+                isRight=false;
+            }
+        }
+
+        let bosshp= [1000, 2000];
+
+        function handleTick(){
+            
+            if(isLeft===true){
+                player.x-=5;
+            }
+            if(isUp===true){
+                player.y-=5;
+            }
+            if(isRight===true){
+                player.x+=5;
+            }
+            if(isDown===true){
+                player.y+=5;
+            }
+
+            if(isSpace===true){
+                let bullet=new createjs.Shape();
+                bullet.graphics.beginFill("white").drawCircle(0,0,3);
+                bullet.x=player.x;  
+                bullet.y=player.y;
+
+                bulletList.push(bullet);stage.addChild(bullet);
+            }
+
+            if(count%100===0){
+                let enemy=new createjs.Shape();
+                enemy.graphics.beginFill("white").drawCircle(0,0,30);
+
+                enemy.x=960;
+                enemy.y=540*Math.random();
+
+                stage.addChild(enemy);
+                enemyList.push(enemy);
+            }
+
+            if(count%500===0){
+                let boss=new createjs.Shape();
+                boss.graphics.beginFill("red").drawCircle(0,0,30);
+                
+                boss.x=960;
+                boss.y=540*Math.random();
+
+                stage.addChild(boss);
+                bossList.push(boss);
+            }
+
+            count++;
+
+
+            for(let i=0;i<enemyList.length;i++){
+                enemyList[i].x-=2;
+            }
+
+            for(let i=0;i<bulletList.length;i++){
+                bulletList[i].x+=10;
+            }
+
+            for(let i=0;i<enemyList.length;i++){
+                let enemyLocal=enemyList[i].localToLocal(0,0,player);
+                if(player.hitTest(enemyLocal.x,enemyLocal.y)){
+                    gameOver();
+                }
+            }
+
+            for(let i=0;i<bossList.length;i++){
+                let bossLocal=bossList[i].localToLocal(0,0,player);
+                if(player.hitTest(bossLocal.x,bossLocal.y)){
+                    gameOver();
+                }
+            }
+
+            for(let i=0;i<bulletList.length;i++){
+                for(let j=0;j<enemyList.length;j++){
+                    let localPoint=bulletList[i].localToLocal(0,0,enemyList[j]);
+                    if(enemyList[j].hitTest(localPoint.x,localPoint.y)){
+
+                        stage.removeChild(bulletList[i]);bulletList.splice(i,1);
+                        stage.removeChild(enemyList[j]);enemyList.splice(j,1);
+                    }
+                }
+            }
+
+            for(let i=0;i<bulletList.length;i++){
+                for(let j=0;j<bossList.length;j++){
+                    let localPoint=bulletList[i].localToLocal(0,0,bossList[j]);
+                    if(bossList[j].hitTest(localPoint.x,localPoint.y)){
+                        console.log(bosshp);
+                        bosshp[j]--;
+
+                        if(bosshp[j] === 0){
+                            stage.removeChild(bulletList[i]);bulletList.splice(i,1);
+                            stage.removeChild(bossList[j]);//bossList.splice(j,1);
+                        }
+                    }
+                }
+            }
+
+            stage.update();
+        
+    }
+
+    function gameOver(){
+        alert("ご臨終です。");
+
+        createjs.Tricker.removeAllEventListeners();
+        stage.removeAllEventListeners();
+    }
+    }
+    </script>
+</head>
+<body>
+<canvas id="myCanvas"width="960"height="540"></canvas>
+</body>
+</html>
