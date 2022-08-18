@@ -94,7 +94,8 @@
             let gameClear = false;
 
             queue.loadManifest([
-                {id: 'player', src: 'img/touhou.png'}
+                {id: 'player', src: 'img/touhou.png'},
+                {id: 'titleBG', src: 'img/back.gif'}
             ]);
 
             // どのキャンバスを見せるかをコントロールするフラグ
@@ -114,8 +115,14 @@
             stage.addChild(resultCanvas);
 
             createjs.Sound.registerSound("sound/titleBGM2.mp3", "titleBGM2");
+            createjs.Sound.setDefaultPlayProps("titleBGM2", new createjs.PlayPropsConfig().set({loop: -1}));
+
             createjs.Sound.registerSound("sound/muteki.mp3","mainBGM");
+            createjs.Sound.setDefaultPlayProps("mainBGM", new createjs.PlayPropsConfig().set({loop: -1}));
+
             createjs.Sound.registerSound("sound/resultBGM.mp3", "resultBGM");
+            createjs.Sound.setDefaultPlayProps("resultBGM", new createjs.PlayPropsConfig().set({loop: -1}));
+
             createjs.Sound.registerSound('sound/shot2.mp3', 'shot2');
             createjs.Sound.registerSound('sound/zakoshi.mp3', 'zakoshi');
             createjs.Sound.registerSound('sound/hit.mp3', 'hit');
@@ -157,69 +164,77 @@
                 createjs.Sound.on('fileload', function(event){
                     createjs.Sound.play("titleBGM2");
                 })
-                // 画像を持ってきてから
-                let bg = new createjs.Bitmap('img/back.gif');
-                bg.scaleX = 3.0
-                bg.scaleY = 3.0
+                
+                let bg = new createjs.Bitmap();
                 let t = 0;
-                // タイトルに背景を追加
+
+                queue.addEventListener('complete', function(event){
+                    // 画像を持ってきてから
+                    bg.image = queue.getResult("titleBG");
+                    bg.scaleX = 3.0;
+                    bg.scaleY = 3.0;
+    
+                    // タイトルに背景を追加
+                    
+                    bg.x=stage.canvas.width/2;
+                    bg.y=stage.canvas.height/2;
+                    bg.textAlign = "center";
+                    bg.regX = bg.getBounds().width/2;
+                    bg.regY = bg.getBounds().height/2;
+                    titleCanvas.addChild(bg);
+
+                    let illust = new createjs.Bitmap('img/alien.png');
+                    illust.scaleX = 0.3
+                    illust.scaleY = 0.3
+
+                    illust.y=stage.canvas.height/2;
+                    
+                    titleCanvas.addChild(illust);
+
+                    //　タイトルにゲームタイトルを追加
+                    let titleText = new createjs.Text("シューティングゲーム", "50px sans-serif","lightblue");
+                    titleText.x=stage.canvas.width/2;
+                    titleText.y=stage.canvas.height/100;
+                    titleText.textAlign = "center";
+                    titleCanvas.addChild(titleText);
+
+                    createjs.Tween.get(titleText)
+                    .to({y: 150},2000,createjs.Ease.cubicOut)
+                    createjs.Tween.get(titleText,{loop: true})
+                    
+                    .to({scaleX: 1.5, scaleY: 1.5},1000)
+                    .to({scaleX: 1, scaleY: 1},1000);
+
+                    
+                    // タイトルに指示文（ゲームの始め方）を追加
+                    let instructionText = new createjs.Text("スペースキーを押して開始", "30px sans-serif","yellow");
+                    instructionText.x=stage.canvas.width/2;
+                    instructionText.y=stage.canvas.height/5;
+                    instructionText.textAlign = "center";
+                    titleCanvas.addChild(instructionText);
+
+                    createjs.Tween.get(instructionText).to({y:450},2000,createjs.Ease.bounceOut);
+
+                    let operationText = new createjs.Text("WASD or  ←↑↓→ で移動", "20px sans-serif","white");
+                    operationText.x=stage.canvas.width/2;
+                    operationText.y=stage.canvas.height*9/16;
+                    operationText.textAlign = "center";
+                    titleCanvas.addChild(operationText);
+
+                    let optText = new createjs.Text("スペースキーで攻撃", "20px sans-serif","white");
+                    optText.x=stage.canvas.width/2;
+                    optText.y=stage.canvas.height*10/16;
+                    optText.textAlign = "center";
+                    titleCanvas.addChild(optText);
+
+                    let motionText = new createjs.Text("Shift キー で高速移動", "20px sans-serif","white");
+                    motionText.x=stage.canvas.width/2;
+                    motionText.y=stage.canvas.height*11/16;
+                    motionText.textAlign = "center";
+                    titleCanvas.addChild(motionText);
+                })
+
                 
-                bg.x=stage.canvas.width/2;
-                bg.y=stage.canvas.height/2;
-                bg.textAlign = "center";
-                bg.regX = bg.getBounds().width/2;
-                bg.regY = bg.getBounds().height/2;
-                titleCanvas.addChild(bg);
-
-                let illust = new createjs.Bitmap('img/alien.png');
-                illust.scaleX = 0.3
-                illust.scaleY = 0.3
-
-                illust.y=stage.canvas.height/2;
-                
-                titleCanvas.addChild(illust);
-
-                //　タイトルにゲームタイトルを追加
-                let titleText = new createjs.Text("シューティングゲーム", "50px sans-serif","white");
-                titleText.x=stage.canvas.width/2;
-                titleText.y=stage.canvas.height/100;
-                titleText.textAlign = "center";
-                titleCanvas.addChild(titleText);
-
-                createjs.Tween.get(titleText)
-                .to({y: 150},2000,createjs.Ease.cubicOut)
-                createjs.Tween.get(titleText,{loop: true})
-                
-                .to({scaleX: 1.5, scaleY: 1.5},1000)
-                .to({scaleX: 1, scaleY: 1},1000);
-
-                
-                // タイトルに指示文（ゲームの始め方）を追加
-                let instructionText = new createjs.Text("スペースキーを押して開始", "30px sans-serif","white");
-                instructionText.x=stage.canvas.width/2;
-                instructionText.y=stage.canvas.height/5;
-                instructionText.textAlign = "center";
-                titleCanvas.addChild(instructionText);
-
-                createjs.Tween.get(instructionText).to({y:450},2000,createjs.Ease.bounceOut);
-
-                let operationText = new createjs.Text("WASD or  ←↑↓→ で移動", "20px sans-serif","white");
-                operationText.x=stage.canvas.width/2;
-                operationText.y=stage.canvas.height*9/16;
-                operationText.textAlign = "center";
-                titleCanvas.addChild(operationText);
-
-                let optText = new createjs.Text("スペースキーで攻撃", "20px sans-serif","white");
-                optText.x=stage.canvas.width/2;
-                optText.y=stage.canvas.height*10/16;
-                optText.textAlign = "center";
-                titleCanvas.addChild(optText);
-
-                let motionText = new createjs.Text("Shift キー で高速移動", "20px sans-serif","white");
-                motionText.x=stage.canvas.width/2;
-                motionText.y=stage.canvas.height*11/16;
-                motionText.textAlign = "center";
-                titleCanvas.addChild(motionText);
 
 
                 // タイトル画面で毎フレーム呼ばれる関数を登録
@@ -230,7 +245,10 @@
                 function titleTick(){
                     // タイトル画面でなければ処理しない
                     if(titleCanvas_enabled === false) return;
-                    bg.y = Math.sin(t)*10+stage.canvas.height/2;
+
+                    if(titleCanvas.contains(bg)){
+                        bg.y = Math.sin(t)*10+stage.canvas.height/2;
+                    }
                     
                     t += 0.1;
 
