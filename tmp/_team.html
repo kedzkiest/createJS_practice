@@ -189,10 +189,12 @@
                     titleCanvas.addChild(bg);
 
                     ufo.image = queue.getResult("ufo");
-                    ufo.x = 0;
+                    ufo.x = 100;
                     ufo.y = 270;
                     ufo.scaleX = 0.3;
                     ufo.scaleY = 0.3;
+                    ufo.regX = ufo.getBounds().width / 2;
+                    ufo.regY = ufo.getBounds().height / 2;
 
                     ufo.y=stage.canvas.height/2;
                     
@@ -250,13 +252,16 @@
                 let randSign, randSign2;
                 let goX;
                 let goY;
+                ufo.rex
 
                 // タイトルだけで毎フレーム走らせたい処理を書く
                 function titleTick(){
                     // タイトル画面でなければ処理しない
                     if(titleCanvas_enabled === false) return;
 
-                    
+                    ufo.rotation = Math.cos(t/3) * 10;
+
+                    console.log("pos ", ufo.x, ufo.y)
                     if(isLeft === true){
                         ufo.x -= 1;
                     }
@@ -271,10 +276,10 @@
                     }
                     
                     
-                    if(ufo.x < 0) ufo.x = 0;
-                    if(ufo.x > 770) ufo.x = 770;
-                    if(ufo.y < 0) ufo.y = 0;
-                    if(ufo.y > 400) ufo.y = 400;
+                    if(ufo.x < 100) ufo.x = 100;
+                    if(ufo.x > 870) ufo.x = 870;
+                    if(ufo.y < 80) ufo.y = 80;
+                    if(ufo.y > 460) ufo.y = 460;
 
                     if(titleCanvas.contains(bg)){
                         bg.y = Math.sin(t)*10+stage.canvas.height/2;
@@ -389,7 +394,7 @@
                 // マウスクリックで弾を撃つ
                 function handleClick() {
                     let bullet = new createjs.Shape();
-                    bullet.graphics.beginFill("white").drawCircle(0, 0, 3);
+                    bullet.graphics.beginFill("white").drawCircle(0, 0, 10);
                     bullet.x = player.x;
                     bullet.y = player.y;
 
