@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>shooting</title>
+    <title>本番環境</title>
     <script src="https://code.createjs.com/1.0.0/createjs.min.js"></script>
     <script>
         // ロードが終わったときに呼ばれる関数を登録
@@ -18,12 +18,19 @@
         const UP = 38;
         const RIGHT = 39;
         const DOWN = 40;
+        const SHIFT = 16;
+        const LEFTt = 65;
+        const UPp = 87;
+        const RIGHTt = 68;
+        const DOWNn = 83;
+
 
         let isSpace = false;
         let isLeft = false;
         let isUp = false;
         let isRight = false;
         let isDown = false;
+        let isShift = false;
 
         function handleKeydown(event){ 
             // キーが押された時の処理
@@ -31,18 +38,21 @@
             if (keyCode === SPACE) {
                 isSpace = true;
             }
-            else if (keyCode === LEFT) {
+            else if (keyCode === LEFT || keyCode === LEFTt) {
                 isLeft = true;
             }
-            else if (keyCode === UP) {
+            else if (keyCode === UP || keyCode === UPp) {
                 isUp = true;
             }
-            else if (keyCode === RIGHT) {
+            else if (keyCode === RIGHT || keyCode === RIGHTt) {
                 isRight = true;
             }
-            else if (keyCode === DOWN) {
+            else if (keyCode === DOWN || keyCode === DOWNn) {
                 isDown = true;
+            }else if (keyCode === SHIFT) {
+                isShift = true;
             }
+            
         }
 
         function handleKeyUp(event) { 
@@ -51,17 +61,20 @@
             if (keyCode === SPACE) {
                 isSpace = false;
             }
-            else if (keyCode === LEFT) {
+            else if (keyCode === LEFT || keyCode === LEFTt) {
                 isLeft = false;
             }
-            else if (keyCode === UP) {
+            else if (keyCode === UP || keyCode === UPp) {
                 isUp = false;
             }
-            else if (keyCode === RIGHT) {
+            else if (keyCode === RIGHT || keyCode === RIGHTt) {
                 isRight = false;
             }
-            else if (keyCode === DOWN) {
+            else if (keyCode === DOWN || keyCode === DOWNn) {
                 isDown = false;
+            }
+            else if (keyCode === SHIFT) {
+                isShift = false;
             }
         }
 
@@ -76,6 +89,9 @@
 
             // スコアを格納する変数
             let score = 0;
+
+            // ゲームをクリアしたか
+            let gameClear = false;
 
             queue.loadManifest([
                 {id: 'player', src: 'img/touhou.png'}
@@ -96,6 +112,16 @@
 
             let resultCanvas = new createjs.Container();
             stage.addChild(resultCanvas);
+
+            createjs.Sound.registerSound("sound/titleBGM2.mp3", "titleBGM2");
+            createjs.Sound.registerSound("sound/muteki.mp3","mainBGM");
+            createjs.Sound.registerSound("sound/resultBGM.mp3", "resultBGM");
+            createjs.Sound.registerSound('sound/shot2.mp3', 'shot2');
+            createjs.Sound.registerSound('sound/zakoshi.mp3', 'zakoshi');
+            createjs.Sound.registerSound('sound/hit.mp3', 'hit');
+            createjs.Sound.registerSound('sound/bossshi.mp3', 'bossshi');
+            createjs.Sound.registerSound('sound/gameover.mp3', 'gameover');
+        
 
             // タイトル画面を初期化
             InitTitle();
@@ -128,30 +154,73 @@
             ////////////////////////////////////////////////////////////////////////////////
 
             function InitTitle(){
+                createjs.Sound.on('fileload', function(event){
+                    createjs.Sound.play("titleBGM2");
+                })
                 // 画像を持ってきてから
-                //let bg = new createjs.Bitmap("img/back.gif");
-
+                let bg = new createjs.Bitmap('img/back.gif');
+                bg.scaleX = 3.0
+                bg.scaleY = 3.0
+                let t = 0;
                 // タイトルに背景を追加
-                bg = new createjs.Shape();
                 
                 bg.x=stage.canvas.width/2;
                 bg.y=stage.canvas.height/2;
                 bg.textAlign = "center";
+                bg.regX = bg.getBounds().width/2;
+                bg.regY = bg.getBounds().height/2;
                 titleCanvas.addChild(bg);
 
+                let illust = new createjs.Bitmap('img/alien.png');
+                illust.scaleX = 0.3
+                illust.scaleY = 0.3
+
+                illust.y=stage.canvas.height/2;
+                
+                titleCanvas.addChild(illust);
+
                 //　タイトルにゲームタイトルを追加
-                let titleText = new createjs.Text("シューティングゲーム", "50px serif","blue");
+                let titleText = new createjs.Text("シューティングゲーム", "50px sans-serif","white");
                 titleText.x=stage.canvas.width/2;
-                titleText.y=stage.canvas.height/3;
+                titleText.y=stage.canvas.height/100;
                 titleText.textAlign = "center";
                 titleCanvas.addChild(titleText);
 
+                createjs.Tween.get(titleText)
+                .to({y: 150},2000,createjs.Ease.cubicOut)
+                createjs.Tween.get(titleText,{loop: true})
+                
+                .to({scaleX: 1.5, scaleY: 1.5},1000)
+                .to({scaleX: 1, scaleY: 1},1000);
+
+                
                 // タイトルに指示文（ゲームの始め方）を追加
-                let instructionText = new createjs.Text("スペースキーを押して開始", "40px serif","blue");
+                let instructionText = new createjs.Text("スペースキーを押して開始", "30px sans-serif","white");
                 instructionText.x=stage.canvas.width/2;
-                instructionText.y=stage.canvas.height*4/5;
+                instructionText.y=stage.canvas.height/5;
                 instructionText.textAlign = "center";
                 titleCanvas.addChild(instructionText);
+
+                createjs.Tween.get(instructionText).to({y:450},2000,createjs.Ease.bounceOut);
+
+                let operationText = new createjs.Text("WASD or  ←↑↓→ で移動", "20px sans-serif","white");
+                operationText.x=stage.canvas.width/2;
+                operationText.y=stage.canvas.height*9/16;
+                operationText.textAlign = "center";
+                titleCanvas.addChild(operationText);
+
+                let optText = new createjs.Text("スペースキーで攻撃", "20px sans-serif","white");
+                optText.x=stage.canvas.width/2;
+                optText.y=stage.canvas.height*10/16;
+                optText.textAlign = "center";
+                titleCanvas.addChild(optText);
+
+                let motionText = new createjs.Text("Shift キー で高速移動", "20px sans-serif","white");
+                motionText.x=stage.canvas.width/2;
+                motionText.y=stage.canvas.height*11/16;
+                motionText.textAlign = "center";
+                titleCanvas.addChild(motionText);
+
 
                 // タイトル画面で毎フレーム呼ばれる関数を登録
                 createjs.Ticker.addEventListener("tick",titleTick);
@@ -161,11 +230,16 @@
                 function titleTick(){
                     // タイトル画面でなければ処理しない
                     if(titleCanvas_enabled === false) return;
+                    bg.y = Math.sin(t)*10+stage.canvas.height/2;
+                    
+                    t += 0.1;
 
                     // タイトル画面でスペースが押されたときだけ、タイトルからメインに移る
                     if(isSpace===true){
                         titleCanvas_enabled = false;
                         mainCanvas_enabled = true;
+
+                        createjs.Sound.stop();
 
                         //　メイン画面を初期化
                         InitMain();
@@ -188,17 +262,20 @@
             //////////////////////////////////////
 
             function InitMain(){
+                createjs.Sound.play("mainBGM");
                 // ザコ敵を格納する配列
                 let enemyList = [];
                 // ボスを格納する配列
                 let bossList=[];
+                let bosshp = [];
                 // 弾を格納する配列
-                let bulletList = [];
-
-                let bosshp = [10, 20];
+                let bulletList = [];                
+                //障害物を格納する配列
+                let obstacleList = [];
 
                 //　毎フレーム加算されるカウンタ
                 let count = 0;
+                let bulletCount = 0;
                 
                 //　スコアの初期化
                 score = 0;
@@ -208,9 +285,12 @@
                 scoreText.y = 100;
 
                 //　メイン画面の背景を追加
-                let bg = new createjs.Shape();
-                bg.graphics.beginFill("black").drawRect(0,0,800,540);
-                mainCanvas.addChild(bg);
+                let bg1 = new createjs.Bitmap('img/back.gif');
+                bg1.scaleX = 3.0;
+                bg1.scaleY = 3.0;
+                bg1.x = 0;
+                bg1.y = 0;
+                mainCanvas.addChild(bg1);
 
                 // メイン画面にスコア部分の背景を追加
                 let scorebg = new createjs.Shape();
@@ -228,15 +308,24 @@
 
                 //　スコア部分の背景よりも上になるように、この段階でスコアテキストを追加
                 mainCanvas.addChild(scoreText);
+                let scoreTextscore =new createjs.Text("score:","24px serif","white");
+                scoreTextscore.x = 810
+                scoreTextscore.y = 100
+                mainCanvas.addChild(scoreTextscore);
 
                 //　残機（ストック）を保管する変数
                 let life = 5;
 
                 // スコア部分の背景よりも上になるように、この段階で残機テキストを追加
                 let lifeText =new createjs.Text(life,"24px serif","white");
-                lifeText.x = 870
+                lifeText.x = 880
                 lifeText.y = 400
                 mainCanvas.addChild(lifeText);
+                mainCanvas.addChild(lifeText);
+                let lifeTextlife =new createjs.Text("life:","24px serif","white");
+                lifeTextlife.x = 840
+                lifeTextlife.y = 400
+                mainCanvas.addChild(lifeTextlife);
                 
 
                 //　メイン画面でクリックした時に呼ばれる関数を登録
@@ -266,27 +355,48 @@
 
                     // カウンターは毎フレーム増える
                     count = count + 1;
+                    bulletCount = bulletCount + 1 ;
 
-                    // プレイヤーの移動
-                    if(isLeft === true){
-                        player.x -= 3;
+                     // プレイヤーの移動
+                     if(isShift === true){
+                        if(isLeft === true){
+                            player.x -= 6;
+                        }
+                        if(isUp === true){
+                            player.y -= 6;
+                        }
+                        if(isRight === true){
+                            player.x += 6;
+                        }
+                        if(isDown === true){
+                            player.y += 6;
+                        }
                     }
-                    if(isUp === true){
-                        player.y -= 3;
+                    else{
+                        if(isLeft === true){
+                            player.x -= 3;
+                        }
+                        if(isUp === true){
+                            player.y -= 3;
+                        }
+                        if(isRight === true){
+                            player.x += 3;
+                        }
+                        if(isDown === true){
+                            player.y += 3;
+                        }
                     }
-                    if(isRight === true){
-                        player.x += 3;
-                    }
-                    if(isDown === true){
-                        player.y += 3;
-                    }
+
 
                     // スペースキーが押されている間、弾を撃ち続ける
-                    if(isSpace === true){
+                    if(isSpace === true && bulletCount % 10 === 0){
                         let bullet = new createjs.Shape();
                         bullet.graphics.beginFill("red").drawCircle(0, 0, 3);
                         bullet.x = player.x;
                         bullet.y = player.y;
+
+                        let shot2 = createjs.Sound.play("shot2");
+                        shot2.volume = 0.3 
 
                         bulletList.push(bullet);
                         mainCanvas.addChild(bullet);
@@ -304,28 +414,50 @@
                         enemy.graphics.beginFill("red").drawCircle(0,0,10);
 
                         enemy.x = 795;
-                        enemy.y = 540 * Math.random();
+                        enemy.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
 
                         mainCanvas.addChild(enemy);
                         enemyList.push(enemy);
                     }
 
                     // ボスの生成（スポーン）
-                    if(count%500===0){
+                    if(count%3000===0 && bossList.length === 0){
                         let boss=new createjs.Shape();
                         boss.graphics.beginFill("red").drawCircle(0,0,30);
                         
                         boss.x = 795;
-                        boss.y = 540*Math.random();
+                        boss.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
         
                         mainCanvas.addChild(boss);
                         bossList.push(boss);
-                        bosshp.push(30);
+                        bosshp.push(60);
+                    }
+
+                    //障害物の生成(スポーン）
+                    if(count % 20 === 0){
+                        let obstacle = new createjs.Shape();
+                        obstacle.graphics.beginFill("yellow").drawCircle(0,0,10);
+
+                        obstacle.x = 795;
+                        obstacle.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
+
+                        mainCanvas.addChild(obstacle);
+                        obstacleList.push(obstacle);
                     }
 
                     //　ザコ敵の移動
                     for(let i = 0; i < enemyList.length; i++){
                         enemyList[i].x -= 2;
+                    }
+
+                    // ボスの移動
+                    for(let i =0;i< bossList.length; i++){
+                        bossList[i].y = Math.cos(count/200)*100+270;
+                    }
+
+                    //障害物の移動
+                    for(let i = 0;i< obstacleList.length; i++){
+                        obstacleList[i].x -= 4
                     }
 
                     //　プレイヤーが撃った弾の移動
@@ -365,9 +497,19 @@
                             // 敵を格納している配列から、ぶつかった敵を削除
                             enemyList.splice(i,1);
 
+                            // 敵を倒すたびにスコアが増える
+                            score += 100;
+
+                            createjs.Sound.play("hit");
+
                             // 残機がなくなったらゲームオーバー
                             if(life === 0){
+                                gameClear = false;
                                 gameOver();
+
+                                let gameover = createjs.Sound.play("gameover");
+                                gameover.volume = 0.3 
+
                             }
                         }
                     }
@@ -379,9 +521,42 @@
 
                         // プレイヤーがボスとぶつかったら
                         if(player.hitTest(bossLocal.x,bossLocal.y)){
+                            gameClear = false;
                             gameOver();
                         }
                     }
+
+                    //　ゲームオーバー処理（障害物とプレイヤーの当たり判定を取る）
+                    for (let i = 0 ;i < obstacleList.length; i++){
+                        // 障害物から見たプレイヤーの相対位置を取得
+                        let obstacleLocal = obstacleList[i].localToLocal(0,0, player);
+
+                        // プレイヤーが障害物とぶつかったら
+                        if(player.hitTest(obstacleLocal.x, obstacleLocal.y)){
+                            // 残機を1減らす
+                            life--;
+
+                            player.alpha = life/5;
+
+                            // メイン画面から敵を消す
+                            mainCanvas.removeChild(obstacleList[i]);
+
+                            // 敵を格納している配列から、ぶつかった敵を削除
+                            obstacleList.splice(i,1);
+                            
+                            createjs.Sound.play("hit");
+
+                            // 残機がなくなったらゲームオーバー
+                            if(life === 0){
+                                gameClear = false;
+                                gameOver();
+
+                                let gameover = createjs.Sound.play("gameover");
+                                gameover.volume = 0.3 
+
+                            }
+                        }
+                    }       
                     
                     //　敵を倒す処理（敵とプレイヤーの撃った弾の当たり判定を取る）
                     for(let i = 0;i < bulletList.length; i++){
@@ -409,6 +584,9 @@
 
                                 // 敵を倒すたびにスコアが増える
                                 score += 100;
+
+                                let zakoshi = createjs.Sound.play("zakoshi");
+
                             }
                         }
                     }
@@ -446,9 +624,48 @@
 
                                     // ボスを倒すたびにスコアが増える
                                     score += 500;
+
+                                    createjs.Sound.play("bossshi");
+
+                                    gameClear = true;
+                                    gameOver();
+
                                 }
                             }
                         }
+                    }
+                    //画面外の敵を消す処理
+                    for(let i=0;i<enemyList.length;i++){
+                        if(enemyList[i].x <= 0 ){
+                            mainCanvas.removeChild(enemyList[i]);
+                            enemyList.splice(i,1);
+                        }
+                        if(800 <= enemyList[i].x){
+                            mainCanvas.removeChild(enemyList[i]);
+                            enemyList.splice(i,1);            
+                        } 
+                    }
+                    //画面外の弾を消す処理   
+                    for(let i=0;i<bulletList.length;i++){
+                        if(bulletList[i].x <= 0 ){
+                            mainCanvas.removeChild(bulletList[i]);
+                            bulletList.splice(i,1);
+                        }
+                        if(800 <= bulletList[i].x){
+                            mainCanvas.removeChild(bulletList[i]);
+                            bulletList.splice(i,1); 
+                        }
+                    }
+                    //画面外の障害物を消す処理
+                    for(let i=0;i<obstacleList.length;i++){
+                        if(obstacleList[i].x <= 0 ){
+                            mainCanvas.removeChild(obstacleList[i]);
+                            obstacleList.splice(i,1);
+                        }
+                        if(800 <= obstacleList[i].x){
+                            mainCanvas.removeChild(obstacleList[i]);
+                            obstacleList.splice(i,1);            
+                        } 
                     }
                 }
 
@@ -459,6 +676,8 @@
 
                     // メイン画面にあるすべてのものを削除
                     mainCanvas.removeAllChildren();
+
+                    createjs.Sound.stop();
 
                     // リザルト画面を初期化
                     InitResult();
@@ -477,15 +696,30 @@
             // リザルト画面
             ///////////////////////////////////////
             function InitResult(){
+                createjs.Sound.play("resultBGM");
+
+                let resultbg = new createjs.Shape();
+                resultbg.graphics.beginFill("black");
+                resultbg.graphics.drawRect(0, 0, 960, 540);
+                resultCanvas.addChild(resultbg);
+
                 //　リザルト画面にクリアテキストを追加
-                let resultText = new createjs.Text("clear","80px sans-serif","black");
+
+                let resultText = new createjs.Text("","80px sans-serif","white");
+                if(gameClear === true){
+                    resultText.text = "clear";
+                }
+                if(gameClear === false){
+                    resultText.text = "gameover";
+                }
+
                 resultText.x = stage.canvas.width/2;
                 resultText.y = stage.canvas.height/3;
                 resultText.textAlign = "center";
                 resultCanvas.addChild(resultText);
 
                 // リザルト画面にスコアテキストを追加
-                let scoreText = new createjs.Text("score: " + score,"60px sans-serif","red");
+                let scoreText = new createjs.Text("score :" + score,"60px sans-serif","white");
                 scoreText.x = stage.canvas.width/2;
                 scoreText.y = stage.canvas.height/2;
                 scoreText.textAlign = "center";
@@ -525,6 +759,9 @@
                 function handleClick(event){
                     resultCanvas_enabled = false;
                     titleCanvas_enabled = true;
+
+                    createjs.Sound.stop();
+                    createjs.Sound.play("titleBGM2");
 
                     // リザルト画面にある全てのものを削除
                     resultCanvas.removeAllChildren();
