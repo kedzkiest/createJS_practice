@@ -97,7 +97,8 @@
                 {id: 'player', src: 'img/touhou.png'},
                 {id: 'titleBG', src: 'img/back.gif'},
                 {id: 'ufo', src: 'img/alien.png'},
-                {id: 'boss', src: 'img/space_kikansen.png'}
+                {id: 'boss', src: 'img/space_kikansen.png'},
+                {id: 'meteor', src: 'img/inseki2.png'}
             ]);
 
             // どのキャンバスを見せるかをコントロールするフラグ
@@ -477,24 +478,38 @@
                         let boss=new createjs.Bitmap(queue.getResult("boss"));
                         boss.scaleX = 0.18
                         boss.scaleY = 0.18
-                        boss.regX = boss.getBounds().height / 2
-                        boss.regY = boss.getBounds().width / 2 
+                        boss.regX = boss.getBounds().height / 2;
+                        boss.regY = boss.getBounds().width / 2;
                         
                         boss.x = 660;
                         boss.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
         
                         mainCanvas.addChild(boss);
                         bossList.push(boss);
-                        bosshp.push(60);
+                        bosshp.push(100);
                     }
 
                     //障害物の生成(スポーン）
-                    if(count % 20 === 0){
-                        let obstacle = new createjs.Shape();
-                        obstacle.graphics.beginFill("yellow").drawCircle(0,0,10);
+                    if(count % 60 === 0){
+                        
+                        let obstacle = new createjs.Container();
+                        
+
+                        let obstacleLook = new createjs.Bitmap(queue.getResult("meteor"));
+                        obstacleLook.x = -500;
+                        obstacleLook.y = -700;
+                        obstacle.addChild(obstacleLook);
+
+                        let obstacleJudge = new createjs.Shape();
+                        obstacleJudge.graphics.beginFill("green").drawCircle(0,0,200);
+                        obstacleJudge.visible = false;
+                        obstacle.addChild(obstacleJudge);
 
                         obstacle.x = 795;
                         obstacle.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
+
+                        obstacle.scaleX = 0.1;
+                        obstacle.scaleY = 0.1;
 
                         mainCanvas.addChild(obstacle);
                         obstacleList.push(obstacle);
@@ -512,7 +527,9 @@
 
                     //障害物の移動
                     for(let i = 0;i< obstacleList.length; i++){
-                        obstacleList[i].x -= 4
+                        obstacleList[i].x -= 1
+                        //obstacleList[i].y += Math.sin(count/100) * 3; 
+                        //obstacleList[i].x = player.x - obstacleList[i].x;
                     }
 
                     //　プレイヤーが撃った弾の移動
