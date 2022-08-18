@@ -96,7 +96,8 @@
             queue.loadManifest([
                 {id: 'player', src: 'img/touhou.png'},
                 {id: 'titleBG', src: 'img/back.gif'},
-                {id: 'ufo', src: 'img/alien.png'}
+                {id: 'ufo', src: 'img/alien.png'},
+                {id: 'boss', src: 'img/space_kikansen.png'}
             ]);
 
             // どのキャンバスを見せるかをコントロールするフラグ
@@ -187,6 +188,8 @@
                     titleCanvas.addChild(bg);
 
                     ufo.image = queue.getResult("ufo");
+                    ufo.x = 0;
+                    ufo.y = 270;
                     ufo.scaleX = 0.3;
                     ufo.scaleY = 0.3;
 
@@ -271,7 +274,6 @@
                     if(ufo.x > 770) ufo.x = 770;
                     if(ufo.y < 0) ufo.y = 0;
                     if(ufo.y > 400) ufo.y = 400;
-                    console.log(ufo.x, ufo.y);
 
                     if(titleCanvas.contains(bg)){
                         bg.y = Math.sin(t)*10+stage.canvas.height/2;
@@ -359,7 +361,7 @@
                 mainCanvas.addChild(scoreTextscore);
 
                 //　残機（ストック）を保管する変数
-                let life = 5;
+                let life = 10;
 
                 // スコア部分の背景よりも上になるように、この段階で残機テキストを追加
                 let lifeText =new createjs.Text(life,"24px serif","white");
@@ -371,6 +373,11 @@
                 lifeTextlife.x = 840
                 lifeTextlife.y = 400
                 mainCanvas.addChild(lifeTextlife);
+
+                let brustFlash = new createjs.Bitmap("img/bakuhatu1.gif");
+                brustFlash.scaleX = 5;
+                brustFlash.scaleY = 5;
+                brustFlash.y = -350;
                 
 
                 //　メイン画面でクリックした時に呼ばれる関数を登録
@@ -467,10 +474,13 @@
 
                     // ボスの生成（スポーン）
                     if(count%3000===0 && bossList.length === 0){
-                        let boss=new createjs.Shape();
-                        boss.graphics.beginFill("red").drawCircle(0,0,30);
+                        let boss=new createjs.Bitmap(queue.getResult("boss"));
+                        boss.scaleX = 0.18
+                        boss.scaleY = 0.18
+                        boss.regX = boss.getBounds().height / 2
+                        boss.regY = boss.getBounds().width / 2 
                         
-                        boss.x = 795;
+                        boss.x = 660;
                         boss.y = Math.random()*(541 - player.getBounds().height / 5) + player.getBounds().height / 10;
         
                         mainCanvas.addChild(boss);
@@ -534,7 +544,7 @@
                             // 残機を1減らす
                             life--;
 
-                            player.alpha = life/5;
+                            player.alpha = life/10 + 0.1;
 
                             // メイン画面から敵を消す
                             mainCanvas.removeChild(enemyList[i]);
@@ -581,7 +591,7 @@
                             // 残機を1減らす
                             life--;
 
-                            player.alpha = life/5;
+                            player.alpha = life/10 + 0.1;
 
                             // メイン画面から敵を消す
                             mainCanvas.removeChild(obstacleList[i]);
@@ -636,6 +646,30 @@
                         }
                     }
 
+                    function sleep(waitSec, callbackFunc) {
+ 
+                        // 経過時間（秒）
+                        var spanedSec = 0;
+                     
+                        // 1秒間隔で無名関数を実行
+                        var id = setInterval(function () {
+                     
+                            spanedSec++;
+                     
+                            // 経過時間 >= 待機時間の場合、待機終了。
+                            if (spanedSec >= waitSec) {
+                     
+                                // タイマー停止
+                                clearInterval(id);
+                     
+                                // 完了時、コールバック関数を実行
+                                if (callbackFunc) callbackFunc();
+                            }
+                        }, 1000);
+                     
+                    }
+                    
+
                     // ボスを倒す処理（ボスとプレイヤーの撃った弾の当たり判定を取る）
                     for(let i=0;i<bulletList.length;i++){
                         for(let j=0;j<bossList.length;j++){
@@ -660,6 +694,8 @@
         
                                 // ボスの体力がなくなったら
                                 if(bosshp[j] === 0){
+                                    brustFlash.visible = true;
+
                                     // メイン画面からボスを消す
                                     mainCanvas.removeChild(bossList[j]);
 
@@ -673,7 +709,14 @@
                                     createjs.Sound.play("bossshi");
 
                                     gameClear = true;
-                                    gameOver();
+                                    
+                                    mainCanvas.removeAllChildren();
+                                    mainCanvas.addChild(brustFlash);
+                                    
+                                    sleep(1, function () {
+                                        gameOver();
+                                    });
+                                    
 
                                 }
                             }
