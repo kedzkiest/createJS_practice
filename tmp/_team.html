@@ -95,7 +95,8 @@
 
             queue.loadManifest([
                 {id: 'player', src: 'img/touhou.png'},
-                {id: 'titleBG', src: 'img/back.gif'}
+                {id: 'titleBG', src: 'img/back.gif'},
+                {id: 'ufo', src: 'img/alien.png'}
             ]);
 
             // どのキャンバスを見せるかをコントロールするフラグ
@@ -168,6 +169,8 @@
                 let bg = new createjs.Bitmap();
                 let t = 0;
 
+                let ufo = new createjs.Bitmap();
+
                 queue.addEventListener('complete', function(event){
                     // 画像を持ってきてから
                     bg.image = queue.getResult("titleBG");
@@ -183,13 +186,13 @@
                     bg.regY = bg.getBounds().height/2;
                     titleCanvas.addChild(bg);
 
-                    let illust = new createjs.Bitmap('img/alien.png');
-                    illust.scaleX = 0.3
-                    illust.scaleY = 0.3
+                    ufo.image = queue.getResult("ufo");
+                    ufo.scaleX = 0.3;
+                    ufo.scaleY = 0.3;
 
-                    illust.y=stage.canvas.height/2;
+                    ufo.y=stage.canvas.height/2;
                     
-                    titleCanvas.addChild(illust);
+                    titleCanvas.addChild(ufo);
 
                     //　タイトルにゲームタイトルを追加
                     let titleText = new createjs.Text("シューティングゲーム", "50px sans-serif","lightblue");
@@ -240,11 +243,35 @@
                 // タイトル画面で毎フレーム呼ばれる関数を登録
                 createjs.Ticker.addEventListener("tick",titleTick);
 
+                let randSign, randSign2;
+                let goX;
+                let goY;
 
                 // タイトルだけで毎フレーム走らせたい処理を書く
                 function titleTick(){
                     // タイトル画面でなければ処理しない
                     if(titleCanvas_enabled === false) return;
+
+                    
+                    if(isLeft === true){
+                        ufo.x -= 1;
+                    }
+                    if(isUp === true){
+                        ufo.y -= 1;
+                    }
+                    if(isRight === true){
+                        ufo.x += 1;
+                    }
+                    if(isDown === true){
+                        ufo.y += 1;
+                    }
+                    
+                    
+                    if(ufo.x < 0) ufo.x = 0;
+                    if(ufo.x > 770) ufo.x = 770;
+                    if(ufo.y < 0) ufo.y = 0;
+                    if(ufo.y > 400) ufo.y = 400;
+                    console.log(ufo.x, ufo.y);
 
                     if(titleCanvas.contains(bg)){
                         bg.y = Math.sin(t)*10+stage.canvas.height/2;
