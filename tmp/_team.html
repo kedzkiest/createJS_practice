@@ -89,6 +89,7 @@
 
             // スコアを格納する変数
             let score = 0;
+            let bestScore = 0;
 
             // ゲームをクリアしたか
             let gameClear = false;
@@ -133,6 +134,15 @@
             createjs.Sound.registerSound('sound/gameover.mp3', 'gameover');
         
 
+            /*
+            titleCanvas_enabled = false;
+            mainCanvas_enabled = false;
+            resultCanvas_enabled = true;
+
+            InitResult();
+            */
+            
+
             // タイトル画面を初期化
             InitTitle();
 
@@ -173,6 +183,8 @@
 
                 let ufo = new createjs.Bitmap();
 
+                let bestScoreText = new createjs.Text("", "30px sans-serif","red");
+
                 queue.addEventListener('complete', function(event){
                     // 画像を持ってきてから
                     bg.image = queue.getResult("titleBG");
@@ -199,6 +211,11 @@
                     ufo.y=stage.canvas.height/2;
                     
                     titleCanvas.addChild(ufo);
+
+                    bestScoreText.x=stage.canvas.width/100;
+                    bestScoreText.y=stage.canvas.height/100;
+                    //bestScoreText.textAlign = "center";
+                    titleCanvas.addChild(bestScoreText);
 
                     //　タイトルにゲームタイトルを追加
                     let titleText = new createjs.Text("シューティングゲーム", "50px sans-serif","lightblue");
@@ -259,9 +276,9 @@
                     // タイトル画面でなければ処理しない
                     if(titleCanvas_enabled === false) return;
 
+                    bestScoreText.text = "ハイスコア：" + bestScore;
                     ufo.rotation = Math.cos(t/3) * 10;
 
-                    console.log("pos ", ufo.x, ufo.y)
                     if(isLeft === true){
                         ufo.x -= 1;
                     }
@@ -726,7 +743,7 @@
                                     bosshp.splice(j,1);
 
                                     // ボスを倒すたびにスコアが増える
-                                    score += 500;
+                                    score += 2500;
 
                                     createjs.Sound.play("bossshi");
 
@@ -813,14 +830,48 @@
                 resultbg.graphics.drawRect(0, 0, 960, 540);
                 resultCanvas.addChild(resultbg);
 
+                let cnt = 0;
+                //星の数は、スコアを定数で割ったものにする
+                //星の配置は、スコアテキストの下で、ボタンの上
+                for(let i = 0; i < score/30; i++){
+                    cnt++;
+
+                    var poly = new createjs.Shape();
+                    poly.graphics.beginFill("yellow"); // 赤色で描画するように設定
+                    poly.graphics.drawPolyStar(0, 0, 75, 5, 0.6, -90); //75pxの星を記述
+                    poly.x =30 + cnt*40;
+                    poly.y = 30 + Math.floor(i/30) * 40;
+
+                    if(i%30 === 0){
+                        poly.x = 30;
+                        cnt = 0;
+                        //poly.y += 30;
+                    }
+                    
+                    poly.scaleX = 0.3;
+                    poly.scaleY = 0.3;
+                    resultCanvas.addChild(poly);
+                }
+
+                let resultCenterBG = new createjs.Shape();
+                resultCenterBG.graphics.beginFill("black");
+                resultCenterBG.graphics.drawRect(255, 160, 450, 200);
+                resultCenterBG.alpha = 0.8;
+                resultCanvas.addChild(resultCenterBG);
+
+                if(gameClear === true && bestScore < score){
+                    bestScore = score;
+                }
+
                 //　リザルト画面にクリアテキストを追加
 
+                
                 let resultText = new createjs.Text("","80px sans-serif","white");
                 if(gameClear === true){
-                    resultText.text = "clear";
+                    resultText.text = "Clear";
                 }
                 if(gameClear === false){
-                    resultText.text = "gameover";
+                    resultText.text = "Game Over";
                 }
 
                 resultText.x = stage.canvas.width/2;
@@ -843,7 +894,7 @@
                 // 新しくボタン（コンテナ）を作成し、リザルト画面に追加
                 var button = new createjs.Container();
                 button.x = 350;
-                button.y = 350;
+                button.y = 360;
                 resultCanvas.addChild(button);
                 
                 // ボタンの背景を作成、枠線の太さ、枠線の色、塗りつぶしの色、塗りつぶしの形を決める
@@ -857,7 +908,7 @@
                 button.addChild(bg);
 
                 // ボタンの文字を作成、ボタンコンテナに追加
-                var label = new createjs.Text("Button", "24px sans-serif", "#000000");
+                var label = new createjs.Text("タイトルへ", "24px sans-serif", "#000000");
                 label.x = btnW / 2;
                 label.y = btnH / 2;
                 label.textAlign = "center";
@@ -876,7 +927,6 @@
                     // リザルト画面にある全てのものを削除
                     resultCanvas.removeAllChildren();
                 }
-
 
                 // リザルト画面で毎フレーム呼ばれる関数を登録
                 createjs.Ticker.addEventListener("tick", resultTick);
