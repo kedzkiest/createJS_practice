@@ -94,7 +94,7 @@
             let gameClear = false;
 
             queue.loadManifest([
-                {id: 'player', src: 'img/touhou.png'},
+                {id: 'player', src: 'img/player.png'},
                 {id: 'titleBG', src: 'img/back.gif'},
                 {id: 'ufo', src: 'img/alien.png'},
                 {id: 'boss', src: 'img/space_kikansen.png'},
@@ -347,8 +347,8 @@
 
                 //　メイン画面にプレイヤーの画像を読み込み、大きさを調整
                 let player = new createjs.Bitmap(queue.getResult("player"));
-                player.scaleX=0.2;
-                player.scaleY=0.2;
+                player.scaleX=0.15;
+                player.scaleY=0.15;
                 player.crossOrigin="Anonymous"; 
                 player.regX = player.getBounds().width / 2;
                 player.regY = player.getBounds().height / 2;
@@ -444,7 +444,7 @@
                     // スペースキーが押されている間、弾を撃ち続ける
                     if(isSpace === true && bulletCount % 10 === 0){
                         let bullet = new createjs.Shape();
-                        bullet.graphics.beginFill("red").drawCircle(0, 0, 3);
+                        bullet.graphics.beginFill("white").drawCircle(0, 0, 10);
                         bullet.x = player.x;
                         bullet.y = player.y;
 
@@ -501,7 +501,7 @@
                         obstacle.addChild(obstacleLook);
 
                         let obstacleJudge = new createjs.Shape();
-                        obstacleJudge.graphics.beginFill("green").drawCircle(0,0,200);
+                        obstacleJudge.graphics.beginFill("green").drawCircle(0,0,240);
                         obstacleJudge.visible = false;
                         obstacle.addChild(obstacleJudge);
 
